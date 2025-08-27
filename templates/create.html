@@ -109,7 +109,7 @@
                 type="date"
                 id="start"
                 name="post-date"
-                />
+        />
 
         <div class="row">
             <div>
@@ -126,9 +126,9 @@
         <!-- 支持一张或多张：multiple；字段名用 files -->
         <input name="files" id="files" type="file" accept="image/*" multiple required/>
 
- <!--       <label>附加选项</label>
-        <input type="checkbox" name="clearExif"> 抹除EXIF拍摄信息
--->
+        <!--       <label>附加选项</label>
+               <input type="checkbox" name="clearExif"> 抹除EXIF拍摄信息
+       -->
         <div id="previewBox">
             <div id="previewGrid" class="grid"></div>
             <div id="fileCount" class="count"></div>
@@ -145,6 +145,13 @@
     const previewBox = document.getElementById('previewBox');
     const previewGrid = document.getElementById('previewGrid');
     const fileCount = document.getElementById('fileCount');
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        document.getElementById("start").value = today;
+    });
+
 
     // 记录已创建的 ObjectURL，便于释放
     let urls = [];

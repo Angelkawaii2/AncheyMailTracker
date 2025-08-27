@@ -84,12 +84,14 @@ func main() {
 		c.Redirect(http.StatusSeeOther, target)
 	})
 
-	// 添加信息的表单
-	r.GET("/create/:key", authMiddleware(), func(c *gin.Context) {
+	createHandler := func(c *gin.Context) {
+		key := c.Param("key")
 		c.HTML(http.StatusOK, "create.html", gin.H{
-			"Key": c.Param("key"),
+			"Key": key,
 		})
-	})
+	}
+	r.GET("/create", authMiddleware(), createHandler)
+	r.GET("/create/:key", authMiddleware(), createHandler)
 
 	// 首页
 	r.GET("/", func(c *gin.Context) {
