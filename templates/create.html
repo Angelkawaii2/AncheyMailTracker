@@ -1,0 +1,187 @@
+{{ define "create.html" }}
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>创建条目</title>
+    <style>
+        body {
+            margin: 24px;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial
+        }
+
+        .wrap {
+            max-width: 840px;
+            margin: auto;
+            display: grid;
+            gap: 16px
+        }
+
+        .card {
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .06)
+        }
+
+        label {
+            display: block;
+            margin: .4rem 0 .2rem;
+            font-weight: 600
+        }
+
+        input[type=text], textarea {
+            width: 100%;
+            padding: .6rem;
+            border: 1px solid #ddd;
+            border-radius: 10px
+        }
+
+        input[type=file] {
+            padding: .4rem;
+            border: 1px dashed #ccc;
+            border-radius: 10px;
+            width: 100%
+        }
+
+        button {
+            padding: .6rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+            cursor: pointer
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 16px
+        }
+
+        .muted {
+            color: #666;
+            font-size: .9rem
+        }
+
+        /* 多图预览 */
+        #previewBox {
+            display: none;
+            margin-top: 8px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid #eee
+        }
+
+        .count {
+            margin-top: 6px;
+            color: #666;
+            font-size: .9rem
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <form class="card" action="/entry" method="post" enctype="multipart/form-data">
+        <h2>创建条目</h2>
+        <p class="muted">为该二维码添加数据，添加后不可更改。</p>
+
+        {{if .Key}}
+        <label>ID: ({{ .Key }})</label>
+        <input name="key" type="text" readonly value="{{ .Key }}" required/>
+        {{else}}
+        <label>ID</label>
+        <input name="key" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required/>
+        {{end}}
+
+        <label for="start">寄送日期:</label>
+        <input
+                type="date"
+                id="start"
+                name="post-date"
+                />
+
+        <div class="row">
+            <div>
+                <label>收件人</label>
+                <input name="name" type="text" placeholder="收件人" required/>
+            </div>
+            <div>
+                <label>备注</label>
+                <input name="comments" type="text" placeholder="备注"/>
+            </div>
+        </div>
+
+        <label>照片（可多选）</label>
+        <!-- 支持一张或多张：multiple；字段名用 files -->
+        <input name="files" id="files" type="file" accept="image/*" multiple required/>
+
+ <!--       <label>附加选项</label>
+        <input type="checkbox" name="clearExif"> 抹除EXIF拍摄信息
+-->
+        <div id="previewBox">
+            <div id="previewGrid" class="grid"></div>
+            <div id="fileCount" class="count"></div>
+        </div>
+
+        <div style="margin-top:10px">
+            <button type="submit">提交并跳转</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const filesInput = document.getElementById('files');
+    const previewBox = document.getElementById('previewBox');
+    const previewGrid = document.getElementById('previewGrid');
+    const fileCount = document.getElementById('fileCount');
+
+    // 记录已创建的 ObjectURL，便于释放
+    let urls = [];
+
+    function clearPreviews() {
+        // 释放历史 ObjectURL
+        urls.forEach(u => URL.revokeObjectURL(u));
+        urls = [];
+        previewGrid.innerHTML = '';
+        fileCount.textContent = '';
+        previewBox.style.display = 'none';
+    }
+
+    filesInput.addEventListener('change', () => {
+        clearPreviews();
+        const files = Array.from(filesInput.files || []);
+        if (files.length === 0) return;
+
+        files.forEach(f => {
+            const url = URL.createObjectURL(f);
+            urls.push(url);
+            const wrap = document.createElement('div');
+            wrap.className = 'thumb';
+            const img = document.createElement('img');
+            img.alt = f.name;
+            img.src = url;
+            wrap.appendChild(img);
+            previewGrid.appendChild(wrap);
+        });
+
+        fileCount.textContent = `已选择 ${files.length} 张图片`;
+        previewBox.style.display = 'block';
+    });
+
+    // 页面卸载时清理
+    window.addEventListener('beforeunload', clearPreviews);
+</script>
+</body>
+</html>
+{{ end }}

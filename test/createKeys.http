@@ -1,0 +1,12 @@
+### GET request to example server
+
+POST localhost:8080/admin/keys/generate
+Content-Type: application/json
+
+{
+  "count": 3,
+  "length": 6
+}
+
+###
+GET localhost:8080/admin/keys
