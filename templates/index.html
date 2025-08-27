@@ -15,13 +15,15 @@
 
 
     <form class="card" action="/lookup" method="post">
-        <h1>安洁露邮件溯源查询系统</h1>
-        <p>请通过扫描邮件二维码查询/创建</p>
-
+        <div>
+            <h1>安洁露邮件溯源查询系统</h1>
+            <p>该系统用于追溯明信片、信件、快递包裹等寄送时的状态</p>
+            <p>建议直接扫描邮件二维码查询，或手动输入：</p>
+        </div>
         <label for="id"> ID: </label>
         <input id="id" name="id" type="text">
         <label for="name"> 收件人: </label>
-        <input id="name" name="id" type="text">
+        <input id="name" name="id" type="text" placeholder="默认为收信人名称">
         <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
         <button type="submit">查询</button>
     </form>
