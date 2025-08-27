@@ -52,9 +52,7 @@ func main() {
 
 	// Load HTML templates (SSR view kept minimal; APIs return JSON)
 	r.LoadHTMLGlob("templates/*.html")
-
-	// Serve saved files so previews work: /files/<key>/<uuid>.img
-	r.StaticFS("/files", http.Dir(filepath.Join(dataDir, "entries")))
+	r.Static("/styles", "./styles")
 
 	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html",

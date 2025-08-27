@@ -1,0 +1,23 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ block "title" . }}默认标题{{ end }}</title>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+<header>
+    <h1>统一的头部</h1>
+</header>
+
+<main>
+    {{ block "content" . }}{{ end }}
+</main>
+
+<footer>
+    <p>统一的底部</p>
+</footer>
+</body>
+</html>
+{{ end }}

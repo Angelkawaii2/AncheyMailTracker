@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="/styles/style.css">
     <script
             src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             async
@@ -10,30 +11,29 @@
     ></script>
 </head>
 <body>
-<div>
-    <h1>安洁露邮件溯源查询系统</h1>
-    <p>请通过扫描邮件二维码查询/创建</p>
+<div class="wrap">
 
 
-    <form action="/lookup" method="post">
-        <label> ID
-            <input name="id" >
-        </label>
-        <label> 收件人
-            <input name="id" >
-        </label>
+    <form class="card" action="/lookup" method="post">
+        <h1>安洁露邮件溯源查询系统</h1>
+        <p>请通过扫描邮件二维码查询/创建</p>
+
+        <label for="id"> ID: </label>
+        <input id="id" name="id" type="text">
+        <label for="name"> 收件人: </label>
+        <input id="name" name="id" type="text">
         <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
         <button type="submit">查询</button>
     </form>
 
     {{if .Authenticated}}
     <p>管理员工具</p>
-    <a href="/create/">
-        <button>创建 key</button>
-    </a>
-    <a href="/admin/keys">
-        <button>查看 key</button>
-    </a>
+    <div class="row">
+        <button type="button" onclick="location.href='/create/'">创建 key</button>
+
+        <button type="button" onclick="location.href='/admin/keys'">查看 key</button>
+    </div>
+
     {{end}}
 </div>
 </body>

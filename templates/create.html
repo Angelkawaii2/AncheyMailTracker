@@ -4,90 +4,10 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>创建条目</title>
+    <link rel="stylesheet" href="/styles/style.css">
+
     <style>
-        body {
-            margin: 24px;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial
-        }
 
-        .wrap {
-            max-width: 840px;
-            margin: auto;
-            display: grid;
-            gap: 16px
-        }
-
-        .card {
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 16px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, .06)
-        }
-
-        label {
-            display: block;
-            margin: .4rem 0 .2rem;
-            font-weight: 600
-        }
-
-        input[type=text], textarea {
-            width: 100%;
-            padding: .6rem;
-            border: 1px solid #ddd;
-            border-radius: 10px
-        }
-
-        input[type=file] {
-            padding: .4rem;
-            border: 1px dashed #ccc;
-            border-radius: 10px;
-            width: 100%
-        }
-
-        button {
-            padding: .6rem 1rem;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background: #fafafa;
-            cursor: pointer
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns:1fr 1fr;
-            gap: 16px
-        }
-
-        .muted {
-            color: #666;
-            font-size: .9rem
-        }
-
-        /* 多图预览 */
-        #previewBox {
-            display: none;
-            margin-top: 8px
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px
-        }
-
-        .thumb img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid #eee
-        }
-
-        .count {
-            margin-top: 6px;
-            color: #666;
-            font-size: .9rem
-        }
     </style>
 </head>
 <body>
@@ -111,16 +31,15 @@
                 name="post-date"
         />
 
-        <div class="row">
-            <div>
-                <label>收件人</label>
-                <input name="name" type="text" placeholder="收件人" required/>
-            </div>
-            <div>
-                <label>备注</label>
-                <input name="comments" type="text" placeholder="备注"/>
-            </div>
-        </div>
+
+        <label>收件人</label>
+        <input name="name" type="text" placeholder="收件人" required/>
+
+        <label>发件地点</label>
+        <input name="location" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required/>
+
+        <label>备注</label>
+        <input name="comments" type="text" placeholder="备注"/>
 
         <label>照片（可多选）</label>
         <!-- 支持一张或多张：multiple；字段名用 files -->
