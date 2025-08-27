@@ -1,9 +1,10 @@
 package services
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"math/rand"
+	"math/big"
 	"os"
 	"path/filepath"
 	"sort"
@@ -49,6 +50,7 @@ func (s *KeysService) Load() error {
 	return nil
 }
 
+// 原子落盘：写入临时文件后 Rename 覆盖
 func (s *KeysService) flushLocked() error {
 	list := make([]KeyInfo, 0, len(s.keys))
 	for _, ki := range s.keys {
@@ -59,26 +61,65 @@ func (s *KeysService) flushLocked() error {
 	if err := os.MkdirAll(filepath.Dir(s.filePath), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(s.filePath, b, 0o644)
+
+	tmp := s.filePath + ".tmp"
+	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	// Rename 在同一分区上是原子的
+	return os.Rename(tmp, s.filePath)
 }
 
 func (s *KeysService) Generate(n int, length int) ([]KeyInfo, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	out := make([]KeyInfo, 0, n)
+	newKeys := make([]string, 0, n)
+
+	// 最多尝试次数，避免极端情况下死循环
+	const maxAttemptsPerKey = 10_000
+
 	for i := 0; i < n; i++ {
 		var k string
-		for {
-			k = randKey(length)
+		var err error
+		ok := false
+		for attempt := 0; attempt < maxAttemptsPerKey; attempt++ {
+			k, err = randKey(length)
+			if err != nil {
+				return nil, err
+			}
 			if _, exists := s.keys[k]; !exists {
-				break
+				// 也避免本批次内重复
+				dup := false
+				for _, nk := range newKeys {
+					if nk == k {
+						dup = true
+						break
+					}
+				}
+				if !dup {
+					ok = true
+					break
+				}
 			}
 		}
+		if !ok {
+			return nil, errors.New("failed to generate unique key without collision")
+		}
+
 		ki := KeyInfo{Key: k, CreatedAt: time.Now()}
+		// 先写入内存；若 flush 失败我们会回滚
 		s.keys[k] = ki
+		newKeys = append(newKeys, k)
 		out = append(out, ki)
 	}
+
+	// 持久化；失败则回滚新加的键，确保状态一致
 	if err := s.flushLocked(); err != nil {
+		for _, k := range newKeys {
+			delete(s.keys, k)
+		}
 		return nil, err
 	}
 	return out, nil
@@ -102,11 +143,17 @@ func (s *KeysService) List() []KeyInfo {
 	return list
 }
 
-func randKey(n int) string {
-	const al = "ABCDEFHJKLMNPQRSTWXY123456789"
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = al[rand.Intn(len(al))]
+// 使用 crypto/rand 生成不可预测 key；字符集避免易混淆字符
+func randKey(n int) (string, error) {
+	const al = "ABCDEFHJKLMNPQRSTWXY123456789" // 31 chars
+	var out = make([]byte, n)
+	max := big.NewInt(int64(len(al)))
+	for i := 0; i < n; i++ {
+		r, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		out[i] = al[r.Int64()]
 	}
-	return string(b)
+	return string(out), nil
 }
