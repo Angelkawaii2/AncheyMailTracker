@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>创建条目</title>
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <style>
-
-    </style>
 </head>
 <body>
     <div class="wrap">
@@ -17,36 +15,47 @@
             <p class="muted">为该二维码添加数据，添加后不可更改。</p>
 
             {{if .Key}}
-            <label for="entryId">ID: ({{ .Key }})</label>
-            <input id="entryId" name="entryId" type="text" readonly value="{{ .Key }}" required />
+            <label for="entryId">
+                <i class="fa-solid fa-fingerprint"></i> ID: ({{ .Key }})
+            </label>
+            <input id="entryId" name="entryId" type="text" readonly value="{{ .Key }}" required/>
             {{else}}
-            <label for="entryId">ID</label>
-            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required />
+            <label for="entryId">
+                <i class="fa-solid fa-fingerprint"></i> ID
+            </label>
+            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required/>
             {{end}}
 
-            <label for="postDate">寄送日期:</label>
-            <input
-                    type="date"
-                    id="postDate"
-                    name="postDate"
-                    required
-            />
+            <label for="postDate">
+                <i class="fa-solid fa-calendar-day"></i> 寄送日期:
+            </label>
+            <input type="date" id="postDate" name="postDate" required />
 
-            <label for="recipientName">收件人</label>
-            <input id="recipientName" name="recipientName" type="text" placeholder="收件人" required />
+            <label for="recipientName">
+                <i class="fa-solid fa-user"></i> 收件人
+            </label>
+            <input id="recipientName" name="recipientName" type="text" placeholder="收件人" required/>
 
-            <label for="originLocation">发件地点</label>
-            <input id="originLocation" name="originLocation" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required />
+            <label for="originLocation">
+                <i class="fa-solid fa-location-dot"></i> 发件地点
+            </label>
+            <input id="originLocation" name="originLocation" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required/>
 
-            <label for="remarks">备注</label>
-            <input id="remarks" name="remarks" type="text" placeholder="备注" />
+            <label for="remarks">
+                <i class="fa-regular fa-note-sticky"></i> 备注
+            </label>
+            <input id="remarks" name="remarks" type="text" placeholder="备注"/>
 
-            <label for="files">照片（可多选）</label>
-            <input id="files" name="files" type="file" accept="image/*" multiple required />
+            <label for="files">
+                <i class="fa-regular fa-image"></i> 照片（可多选）
+            </label>
+            <input id="files" name="files" type="file" accept="image/*" multiple required/>
 
             <!-- 可选附加项示例 -->
             <!--
-            <label for="clearExif">附加选项</label>
+            <label for="clearExif">
+              <i class="fa-solid fa-shield-halved"></i> 附加选项
+            </label>
             <input id="clearExif" type="checkbox" name="clearExif" /> 抹除EXIF拍摄信息
             -->
 
@@ -62,55 +71,56 @@
     </div>
 
 
-<script>
-    const filesInput = document.getElementById('files');
-    const previewBox = document.getElementById('previewBox');
-    const previewGrid = document.getElementById('previewGrid');
-    const fileCount = document.getElementById('fileCount');
+
+    <script>
+        const filesInput = document.getElementById('files');
+        const previewBox = document.getElementById('previewBox');
+        const previewGrid = document.getElementById('previewGrid');
+        const fileCount = document.getElementById('fileCount');
 
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-        document.getElementById("start").value = today;
-    });
-
-
-    // 记录已创建的 ObjectURL，便于释放
-    let urls = [];
-
-    function clearPreviews() {
-        // 释放历史 ObjectURL
-        urls.forEach(u => URL.revokeObjectURL(u));
-        urls = [];
-        previewGrid.innerHTML = '';
-        fileCount.textContent = '';
-        previewBox.style.display = 'none';
-    }
-
-    filesInput.addEventListener('change', () => {
-        clearPreviews();
-        const files = Array.from(filesInput.files || []);
-        if (files.length === 0) return;
-
-        files.forEach(f => {
-            const url = URL.createObjectURL(f);
-            urls.push(url);
-            const wrap = document.createElement('div');
-            wrap.className = 'thumb';
-            const img = document.createElement('img');
-            img.alt = f.name;
-            img.src = url;
-            wrap.appendChild(img);
-            previewGrid.appendChild(wrap);
+        document.addEventListener("DOMContentLoaded", function () {
+            const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+            document.getElementById("postDate").value = today;
         });
 
-        fileCount.textContent = `已选择 ${files.length} 张图片`;
-        previewBox.style.display = 'block';
-    });
 
-    // 页面卸载时清理
-    window.addEventListener('beforeunload', clearPreviews);
-</script>
+        // 记录已创建的 ObjectURL，便于释放
+        let urls = [];
+
+        function clearPreviews() {
+            // 释放历史 ObjectURL
+            urls.forEach(u => URL.revokeObjectURL(u));
+            urls = [];
+            previewGrid.innerHTML = '';
+            fileCount.textContent = '';
+            previewBox.style.display = 'none';
+        }
+
+        filesInput.addEventListener('change', () => {
+            clearPreviews();
+            const files = Array.from(filesInput.files || []);
+            if (files.length === 0) return;
+
+            files.forEach(f => {
+                const url = URL.createObjectURL(f);
+                urls.push(url);
+                const wrap = document.createElement('div');
+                wrap.className = 'thumb';
+                const img = document.createElement('img');
+                img.alt = f.name;
+                img.src = url;
+                wrap.appendChild(img);
+                previewGrid.appendChild(wrap);
+            });
+
+            fileCount.textContent = `已选择 ${files.length} 张图片`;
+            previewBox.style.display = 'block';
+        });
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', clearPreviews);
+    </script>
 </body>
 </html>
 {{ end }}
