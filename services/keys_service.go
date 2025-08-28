@@ -137,9 +137,10 @@ func (s *KeysService) List() []KeyInfo {
 	defer s.mu.RUnlock()
 	list := make([]KeyInfo, 0, len(s.keys))
 	for _, ki := range s.keys {
+		//ki.HasData = entriesSrvc.HasData(ki.Key)
 		list = append(list, ki)
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.Before(list[j].CreatedAt) })
+	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.After(list[j].CreatedAt) })
 	return list
 }
 

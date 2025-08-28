@@ -83,12 +83,10 @@ func (s *EntriesService) SaveData(key string, raw json.RawMessage) error {
 
 func (s *EntriesService) LoadData(key string) (*EntryEnvelope, error) {
 	p := s.entryPath(key)
-	log.Print("call LoadData", p)
 	b, err := os.ReadFile(p)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("loaded %s", b)
 	var env EntryEnvelope
 	if err := json.Unmarshal(b, &env); err != nil {
 		log.Printf("error unmarshalling %s", b)

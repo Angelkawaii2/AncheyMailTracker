@@ -54,5 +54,5 @@ func (s *FilesService) SaveImage(key string, file multipart.File, removeExif boo
 	}
 
 	// Return URL path under /files so it can be served
-	return "/files/" + key + "/" + name, nil
+	return name, nil
 }

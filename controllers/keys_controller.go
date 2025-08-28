@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"mailtrackerProject/services"
 	"net/http"
 	"time"
@@ -59,7 +60,9 @@ func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.
 				"used":       entries.HasData(ki.Key),
 			})
 		}
+		log.Print(out)
 		//todo 优化展示模板
-		c.JSON(http.StatusOK, gin.H{"items": out})
+		//c.JSON(http.StatusOK, gin.H{"items": out})
+		c.HTML(http.StatusOK, "key_view.html", out)
 	}
 }

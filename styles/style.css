@@ -35,6 +35,30 @@
         --accent: #4ea3ff;
     }
 }
+/* 夜间模式覆盖 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --tag-unused-text: #7fffa1;
+        --tag-unused-border: #295c3a;
+        --tag-unused-bg: #1b2a22;
+
+        --tag-used-text: #ff8a9c;
+        --tag-used-border: #5c2b32;
+        --tag-used-bg: #2a1b1e;
+    }
+}
+/* 原始数据块 */
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    background: var(--bg-light);
+    color: var(--text);
+    max-width: 100%;
+    overflow-x: auto;
+}
 
 /* ===== Global ===== */
 * { box-sizing: border-box; }
@@ -90,7 +114,7 @@ input[type="file"] {
     border-radius: var(--radius);
 }
 
-button {
+.btn {
     padding: var(--pad-md) 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
@@ -129,4 +153,26 @@ button:hover { border-color: var(--accent); }
     border-radius: calc(var(--radius) * 1.2);
     border: 1px solid var(--border-light);
     background: var(--bg-light);
+}
+/* tag base */
+.tag {
+    display: inline-block;
+    padding: .12rem .5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: .85rem;
+}
+
+/* 已使用 */
+.tag.used {
+    color: var(--tag-used-text, #0a7a2e);
+    border-color: var(--tag-used-border, #bfe3c7);
+    background: var(--tag-used-bg, #ecf8ef);
+}
+
+/* 未使用 */
+.tag.unused {
+    color: var(--tag-unused-text, #7a1420);
+    border-color: var(--tag-unused-border, #f1c0c4);
+    background: var(--tag-unused-bg, #fff1f2);
 }

@@ -7,8 +7,6 @@ import (
 	"mailtrackerProject/services"
 	"net/http"
 	"net/url"
-	"path"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -57,7 +55,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 				return
 			}
 
-			relPath, err := files.SaveImage(key, f, true)
+			fileName, err := files.SaveImage(key, f, true)
 			_ = f.Close() // 立即关闭，避免在循环里 defer 堆积
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -65,10 +63,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 				return
 			}
 
-			// 兼容任意后缀：从文件名去掉扩展名得到 ID（之前你是 .img，现在可能是 .webp/.jpg）
-			base := path.Base(relPath)
-			id := strings.TrimSuffix(base, path.Ext(base))
-			imageIDs = append(imageIDs, id)
+			imageIDs = append(imageIDs, fileName)
 		}
 
 		payload := map[string]any{
@@ -112,7 +107,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			}
 			c.HTML(http.StatusOK, "view.html", gin.H{
 				"Key":       key,
-				"CreatedAt": data.CreatedAt,
+				"CreatedAt": data.CreatedAt.Format("2006-01-02 15:04:05"),
 				"data":      parsedJsonData,
 				"raw":       string(rawJson),
 			})
