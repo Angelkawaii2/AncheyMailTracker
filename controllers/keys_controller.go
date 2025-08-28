@@ -56,7 +56,7 @@ func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.
 		for _, ki := range all {
 			out = append(out, gin.H{
 				"key":        ki.Key,
-				"created_at": ki.CreatedAt.Format(time.RFC3339),
+				"created_at": ki.CreatedAt.Format("2006-01-02 15:04:05"),
 				"used":       entries.HasData(ki.Key),
 			})
 		}
