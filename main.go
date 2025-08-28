@@ -22,7 +22,7 @@ func main() {
 
 	adminToken := os.Getenv("ADMIN_TOKEN")
 	if adminToken == "" {
-		log.Println("[WARN] ADMIN_TOKEN environment variable not set, using random token")
+		log.Println("[WARN] ADMIN_TOKEN environment variable not set, using random token.")
 
 		buf := make([]byte, 8)
 		if _, err := rand.Read(buf); err != nil {

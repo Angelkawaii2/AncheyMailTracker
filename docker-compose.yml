@@ -1,0 +1,60 @@
+version: "3.9"
+
+# 如果你的宿主机是 Apple Silicon / ARM，但依赖只在 amd64 上更稳，取消下一行注释
+# x-defaults: &defaults
+#   platform: linux/amd64
+
+services:
+  # ---- 开发容器（热重载 / CGO / 依赖齐全）----
+  app:
+    build:
+      context: .               # 以项目根目录为构建上下文
+      target: dev              # 使用 Dockerfile 的 dev 阶段
+      # <<: *defaults          # 如需强制 amd64，取消注释
+    image: ancheymailtracker-dev         # 本地开发镜像名（可改）
+    working_dir: /app
+    volumes:
+      - .:/app:cached          # 将当前项目挂载进容器（热重载依赖这个）
+      - gocache:/go/pkg/mod    # Go module 缓存
+      - gobuild:/root/.cache/go-build  # Go build 缓存
+    environment:
+      - CGO_ENABLED=1
+      - GO111MODULE=on
+      # 你的服务监听端口（与你代码一致）
+      - PORT=8080
+      # 如使用 gin/fiber/echo 等可设置对应 ENV（示例）
+      - GIN_MODE=debug
+    ports:
+      - "8080:8080"            # 暴露应用端口（与代码监听一致）
+      - "2345:2345"            # 预留给 delve 远程调试（可删）
+    # 如果暂时不用 Air，想用 dlv 调试，把下面 command 放开、同时在 Dockerfile dev 阶段安装 dlv
+    # command: ["dlv", "debug", "--headless", "--listen=:2345", "--api-version=2", "--accept-multiclient", "--", "-http=:8080"]
+    # healthcheck 可选：确保容器就绪时才被视为 healthy（按你的健康检查接口调整）
+    healthcheck:
+      test: ["CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # ---- 生产容器（使用 runtime 阶段构建出的精简镜像）----
+  app-prod:
+    build:
+      context: .
+      target: runtime          # 使用 Dockerfile 的 runtime 阶段
+      # <<: *defaults
+    image: yourapp:prod        # 生产镜像名（用于本机验证或推仓库）
+    environment:
+      - PORT=8080
+      - GIN_MODE=release
+    ports:
+      - "8080:8080"
+    # 生产容器通常不需要挂源码卷
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started # 仅示例；真实部署时可移除 app 服务，单独运行 app-prod
+
+volumes:
+  gocache:
+  gobuild:
