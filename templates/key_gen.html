@@ -20,7 +20,7 @@
             {{end}}
 
             <label for="quantity">数量</label>
-            <input class="input" type="number" id="quantity" name="quantity" min="1" max="1000" step="1" value="1">
+            <input class="input" type="number" id="quantity" name="quantity" min="1" max="1000" step="1" value="10">
             <label for="length">长度</label>
             <input class="input" type="number" id="length" name="length" min="6" max="20" step="1" value="6">
             <button class="btn" type="submit">生成</button>
@@ -44,8 +44,7 @@
             </table>
         </div>
         {{end}}
-
-        {{ if .ids }}
+<!--        {{ if .ids }}
         <div class="card">
             <ul>
                 {{ range .ids }}
@@ -53,11 +52,8 @@
                 {{end}}
             </ul>
         </div>
-        {{end}}
-
-
+        {{end}}-->
     </div>
-
 </body>
 </html>
 {{ end }}

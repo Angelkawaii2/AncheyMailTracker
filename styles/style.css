@@ -127,6 +127,15 @@ input[type="file"] {
     cursor: pointer;
 }
 
+
+.btn.create {
+    background-color: rgba(0, 255, 42, 0.13);
+}
+
+.btn.view {
+    background-color: rgba(0, 157, 255, 0.13);
+}
+
 /* 表格基础样式 */
 table {
     width: 100%;
