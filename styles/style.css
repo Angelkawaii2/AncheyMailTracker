@@ -127,8 +127,50 @@ input[type="file"] {
     cursor: pointer;
 }
 
-button:hover {
+/* 表格基础样式 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+th {
+    white-space: nowrap;
+}
+
+.keyid {
+    font-family: monospace Monospaced;
+    font-weight: bold;
+}
+
+/* 横向滚动兜底（中小屏防挤压） */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.btn:hover {
     border-color: var(--accent);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6; /* 变淡，提示不可用 */
+    cursor: not-allowed; /* 鼠标样式显示不可用 */
+    background: var(--bg-light-disabled, #f0f0f0); /* 可定义单独变量 */
+    color: var(--text-disabled, #999); /* 字体颜色变灰 */
+    border-color: var(--border-color-disabled, #ccc);
+}
+
+/* 禁用时不应用 hover 效果 */
+.btn:disabled:hover,
+.btn[disabled]:hover {
+    border-color: var(--border-color-disabled, #ccc);
 }
 
 /* Layout bits */

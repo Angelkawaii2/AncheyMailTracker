@@ -4,28 +4,54 @@ import (
 	"log"
 	"mailtrackerProject/services"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
-	type req struct {
-		Count  int `json:"count"`
-		Length int `json:"length"`
-	}
+
 	return func(c *gin.Context) {
-		var r req
-		if err := c.ShouldBindJSON(&r); err != nil || r.Count <= 0 || r.Count > 10000 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid count"})
+
+		q, err := strconv.Atoi(c.PostForm("quantity"))
+		length, err := strconv.Atoi(c.PostForm("length"))
+
+		if q <= 0 || q > 1000000 {
+			c.HTML(http.StatusBadRequest, "key_gen.html", gin.H{"error": "invalid count"})
 			return
 		}
-		out, err := keys.Generate(r.Count, r.Length)
+		if length < 6 || length > 100 {
+			c.HTML(http.StatusBadRequest, "key_gen.html", gin.H{"error": "length must be >6 and <100"})
+			return
+		}
+
+		out, err := keys.Generate(q, length)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"keys": out})
+		ids := make([]string, 0, len(out))
+		for _, item := range out {
+			log.Println(item.Key)
+			ids = append(ids, item.Key)
+		}
+
+		// 转成模板专用结构
+		type EntryView struct {
+			Key       string
+			CreatedAt string
+		}
+		views := make([]EntryView, len(out))
+		for i, e := range out {
+			views[i] = EntryView{
+				Key:       e.Key,
+				CreatedAt: e.CreatedAt.Format("2006-01-02 15:04:05"),
+			}
+		}
+
+		c.HTML(http.StatusOK, "key_gen.html", gin.H{"keys": views, "ids": ids})
 	}
 }
 

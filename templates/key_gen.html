@@ -1,0 +1,63 @@
+{{ define "key_gen.html" }}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>生成Key</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+    <div class="wrap">
+        <form class="card" method="post">
+            <h1>创建Key</h1>
+
+            {{ if .error }}
+            <div>
+                <h4>错误</h4>
+                <p>{{ .error }}</p>
+            </div>
+            {{end}}
+
+            <label for="quantity">数量</label>
+            <input class="input" type="number" id="quantity" name="quantity" min="1" max="1000" step="1" value="1">
+            <label for="length">长度</label>
+            <input class="input" type="number" id="length" name="length" min="6" max="20" step="1" value="6">
+            <button class="btn" type="submit">生成</button>
+        </form>
+
+
+        {{ if .keys}}
+        <div class="card">
+            <h3>生成结果</h3>
+            <table>
+                <tr>
+                    <td>ID</td>
+                    <td>生成时间</td>
+                </tr>
+                {{range .keys}}
+                <tr>
+                    <td class="keyid"> {{.Key}}</td>
+                    <td> {{ .CreatedAt}}</td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
+        {{end}}
+
+        {{ if .ids }}
+        <div class="card">
+            <ul>
+                {{ range .ids }}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
+
+
+    </div>
+
+</body>
+</html>
+{{ end }}

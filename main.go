@@ -112,6 +112,9 @@ func main() {
 	admin := r.Group("/admin", authMiddleware())
 	{
 		//admin.GET('/')
+		admin.GET("/keys/generate", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "key_gen.html", gin.H{})
+		})
 		admin.POST("/keys/generate", controllers.KeysGenerate(keysSvc))
 		admin.GET("/keys/status/:key", controllers.KeyStatus(keysSvc, entriesSvc))
 		admin.GET("/keys", controllers.KeysList(keysSvc, entriesSvc))
