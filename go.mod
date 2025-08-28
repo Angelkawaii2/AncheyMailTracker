@@ -5,6 +5,9 @@ go 1.25
 require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
+	github.com/kolesa-team/go-webp v1.0.5
+	github.com/strukturag/libheif v1.20.2
+	golang.org/x/image v0.30.0
 )
 
 require (
