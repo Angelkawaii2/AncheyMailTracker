@@ -17,13 +17,8 @@ services:
       - .:/app:cached          # 将当前项目挂载进容器（热重载依赖这个）
       - gocache:/go/pkg/mod    # Go module 缓存
       - gobuild:/root/.cache/go-build  # Go build 缓存
-    environment:
-      - CGO_ENABLED=1
-      - GO111MODULE=on
-      # 你的服务监听端口（与你代码一致）
-      - PORT=8080
-      # 如使用 gin/fiber/echo 等可设置对应 ENV（示例）
-      - GIN_MODE=debug
+    env_file:
+      - .env.development
     ports:
       - "8080:8080"            # 暴露应用端口（与代码监听一致）
       - "2345:2345"            # 预留给 delve 远程调试（可删）

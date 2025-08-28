@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -10,13 +11,12 @@ import (
 	"io"
 	"log"
 	"mailtrackerProject/models"
-	"mime"
 	"mime/multipart"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	"github.com/kolesa-team/go-webp/decoder"
 	"github.com/kolesa-team/go-webp/encoder"
@@ -45,12 +45,11 @@ func (s *FilesService) SaveImage(key string, file multipart.File, removeExif boo
 	}
 
 	// ---- 2) MIME 粗判 ----
-	ctype := http.DetectContentType(buf)
-	mediaType, _, _ := mime.ParseMediaType(ctype)
-	if !strings.HasPrefix(mediaType, "image/") {
-		return "", errors.New("unsupported content type")
+	mediaType, err := detectMime(buf)
+	if err != nil {
+		return "", errors.New("unsupported file type: " + mediaType)
 	}
-
+	log.Println(mediaType)
 	// ---- 3) 确保目录存在 ----
 	dir := filepath.Join(s.dataDir, "entries", key, "images")
 	if err := os.MkdirAll(dir, 0o755); err != nil {

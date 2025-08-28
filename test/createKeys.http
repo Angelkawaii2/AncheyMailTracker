@@ -2,11 +2,13 @@
 
 POST localhost:8080/admin/keys/generate
 Content-Type: application/json
+Cookie: X-Admin-Token=114514
 
 {
-  "count": 3,
+  "count": 5,
   "length": 6
 }
 
 ###
 GET localhost:8080/admin/keys
+X-Admin-Token: 114514
