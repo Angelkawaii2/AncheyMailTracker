@@ -11,53 +11,56 @@
     </style>
 </head>
 <body>
-<div class="wrap">
-    <form class="card" action="/entry" method="post" enctype="multipart/form-data">
-        <h2>创建条目</h2>
-        <p class="muted">为该二维码添加数据，添加后不可更改。</p>
+    <div class="wrap">
+        <form class="card" action="/entry" method="post" enctype="multipart/form-data">
+            <h2>创建条目</h2>
+            <p class="muted">为该二维码添加数据，添加后不可更改。</p>
 
-        {{if .Key}}
-        <label>ID: ({{ .Key }})</label>
-        <input name="key" type="text" readonly value="{{ .Key }}" required/>
-        {{else}}
-        <label>ID</label>
-        <input name="key" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required/>
-        {{end}}
+            {{if .Key}}
+            <label for="entryId">ID: ({{ .Key }})</label>
+            <input id="entryId" name="entryId" type="text" readonly value="{{ .Key }}" required />
+            {{else}}
+            <label for="entryId">ID</label>
+            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required />
+            {{end}}
 
-        <label for="start">寄送日期:</label>
-        <input
-                type="date"
-                id="start"
-                name="post-date"
-        />
+            <label for="postDate">寄送日期:</label>
+            <input
+                    type="date"
+                    id="postDate"
+                    name="postDate"
+                    required
+            />
 
+            <label for="recipientName">收件人</label>
+            <input id="recipientName" name="recipientName" type="text" placeholder="收件人" required />
 
-        <label>收件人</label>
-        <input name="name" type="text" placeholder="收件人" required/>
+            <label for="originLocation">发件地点</label>
+            <input id="originLocation" name="originLocation" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required />
 
-        <label>发件地点</label>
-        <input name="location" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required/>
+            <label for="remarks">备注</label>
+            <input id="remarks" name="remarks" type="text" placeholder="备注" />
 
-        <label>备注</label>
-        <input name="comments" type="text" placeholder="备注"/>
+            <label for="files">照片（可多选）</label>
+            <input id="files" name="files" type="file" accept="image/*" multiple required />
 
-        <label>照片（可多选）</label>
-        <!-- 支持一张或多张：multiple；字段名用 files -->
-        <input name="files" id="files" type="file" accept="image/*" multiple required/>
+            <!-- 可选附加项示例 -->
+            <!--
+            <label for="clearExif">附加选项</label>
+            <input id="clearExif" type="checkbox" name="clearExif" /> 抹除EXIF拍摄信息
+            -->
 
-        <!--       <label>附加选项</label>
-               <input type="checkbox" name="clearExif"> 抹除EXIF拍摄信息
-       -->
-        <div id="previewBox">
-            <div id="previewGrid" class="grid"></div>
-            <div id="fileCount" class="count"></div>
-        </div>
+            <div id="previewBox">
+                <div id="previewGrid" class="grid"></div>
+                <div id="fileCount" class="count"></div>
+            </div>
 
-        <div style="margin-top:10px">
-            <button type="submit">提交并跳转</button>
-        </div>
-    </form>
-</div>
+            <div style="margin-top:10px">
+                <button type="submit">提交并跳转</button>
+            </div>
+        </form>
+    </div>
+
 
 <script>
     const filesInput = document.getElementById('files');

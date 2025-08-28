@@ -6,17 +6,17 @@
     <link rel="stylesheet" href="/styles/style.css">
 </head>
 <body>
-<h2>登录</h2>
-{{if .Error}}
-<p style="color:red;">{{.Error}}</p>
-{{end}}
-
-{{.Redirect}}
-<form method="post" action="/login">
-    <label>Admin Token</label>
-    <input type="hidden" name="redirect" value="{{.Redirect}}">
-    <input type="password" name="password" required>
-    <button type="submit">登录</button>
-</form>
+    <div class="wrap">
+        <form class="card" method="post" action="/login">
+            <h2>登录</h2>
+            {{if .Error}}
+            <p style="color:red;">{{.Error}}</p>
+            {{end}}
+            <input type="hidden" name="redirect" value="{{.Redirect}}">
+            <label for="passwd">Admin Token</label>
+            <input id="passwd" class="input" type="password" name="password" required>
+            <button class="btn" type="submit">登录</button>
+        </form>
+    </div>
 </body>
 </html>

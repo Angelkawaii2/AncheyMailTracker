@@ -14,7 +14,7 @@ import (
 
 func PostEntry(entries *services.EntriesService, files *services.FilesService, keys *services.KeysService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		key := c.PostForm("key")
+		key := c.PostForm("entryId")
 		if !models.ValidKey(key) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid key format"})
 			log.Print("invalid key format: ", key)
@@ -25,9 +25,10 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			return
 		}
 
-		name := c.PostForm("name")
-		comments := c.PostForm("comments")
-		postDate := c.PostForm("post-date")
+		recipientName := c.PostForm("recipientName")
+		remarks := c.PostForm("remarks")
+		originLocation := c.PostForm("originLocation")
+		postDate := c.PostForm("postDate")
 
 		// 解析 multipart 表单并拿到所有同名字段 file
 		form, err := c.MultipartForm()
@@ -67,10 +68,11 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 		}
 
 		payload := map[string]any{
-			"name":      name,
-			"comments":  comments,
-			"images":    imageIDs, // 由单图 image → 多图 images
-			"post_date": postDate,
+			"recipientName":  recipientName,
+			"remarks":        remarks,
+			"images":         imageIDs, // 由单图 image → 多图 images
+			"postDate":       postDate,
+			"originLocation": originLocation,
 		}
 		raw, _ := json.Marshal(payload)
 		if err := entries.SaveData(key, raw); err != nil {

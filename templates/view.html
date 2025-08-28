@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>验证信息 {{ .Key }}</title>
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body {
             margin: 16px;
@@ -106,89 +107,107 @@
     </style>
 </head>
 <body>
-<div class="card">
-    <h1 style="text-align: center">{{ .Key }}</h1>
+    <div class="wrap">
+        <div class="card">
+            <h1 style="text-align: center">{{ .Key }}</h1>
 
-    {{ if .data }}
-    <section class="meta" aria-label="条目信息">
-        <div class="meta-item">
-            <div class="meta-label">创建时间</div>
-            <div class="meta-value">{{ .CreatedAt }}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">邮戳时间</div>
-            <div class="meta-value">{{ .data.post_date }}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">收件人</div>
-            <div class="meta-value">{{ .data.name }}</div>
-        </div>
-        <div class="meta-item" style="grid-column: 1 / -1;">
-            <div class="meta-label">备注</div>
-            <div class="meta-value">{{ .data.comments }}</div>
-        </div>
-    </section>
+            {{ if .data }}
+            <section class="meta" aria-label="条目信息">
+                <div class="meta-item">
+                    <div class="meta-label">
+                        <i class="fa-regular fa-clock"></i> 创建时间
+                    </div>
+                    <div class="meta-value">{{ .CreatedAt }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">
+                        <i class="fa-solid fa-calendar-day"></i> 邮戳时间
+                    </div>
+                    <div class="meta-value">{{ .data.postDate }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">
+                        <i class="fa-solid fa-user"></i> 收件人
+                    </div>
+                    <div class="meta-value">{{ .data.recipientName }}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">
+                        <i class="fa-solid fa-location-dot"></i> 发件地点
+                    </div>
+                    <div class="meta-value">{{ .data.originLocation }}</div>
+                </div>
+                <div class="meta-item" style="grid-column: 1 / -1;">
+                    <div class="meta-label">
+                        <i class="fa-regular fa-note-sticky"></i> 备注
+                    </div>
+                    <div class="meta-value">{{ .data.remarks }}</div>
+                </div>
+            </section>
 
-    {{ if .data.images }}
+            {{ if .data.images }}
+            <div class="gallery">
+                {{ range .data.images }}
+                <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">
+                {{ end }}
+            </div>
+            {{ end }}
+            {{ else }}
+            <section class="meta" aria-label="条目信息">
+                <div class="meta-item" style="grid-column: 1 / -1;">
+                    <div class="meta-label">
+                        <i class="fa-regular fa-clock"></i> 创建时间
+                    </div>
+                    <div class="meta-value">{{ .CreatedAt }}</div>
+                </div>
+            </section>
+            {{ end }}
 
-    <div class="gallery">
-        {{ range .data.images }}
-        <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">
-        {{ end }}
+            <div style="display: none">
+                <h3>原始数据</h3>
+                <pre>{{ .raw }}</pre>
+            </div>
+        </div>
     </div>
-    {{ end }}
-    {{ else }}
-    <section class="meta" aria-label="条目信息">
-        <div class="meta-item" style="grid-column: 1 / -1;">
-            <div class="meta-label">创建时间</div>
-            <div class="meta-value">{{ .CreatedAt }}</div>
-        </div>
-    </section>
-    {{ end }}
 
-    <div style="display: none">
-        <h3>原始数据</h3>
-        <pre>{{ .raw }}</pre>
+
+    <!-- lightbox -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
+        <span class="close" id="lbClose" aria-label="Close">&times;</span>
+        <img id="lbImg" src="" alt="preview">
     </div>
-</div>
 
-<!-- lightbox -->
-<div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
-    <span class="close" id="lbClose" aria-label="Close">&times;</span>
-    <img id="lbImg" src="" alt="preview">
-</div>
+    <script>
+        (function () {
+            const lb = document.getElementById('lightbox');
+            const lbImg = document.getElementById('lbImg');
+            const lbClose = document.getElementById('lbClose');
 
-<script>
-    (function () {
-        const lb = document.getElementById('lightbox');
-        const lbImg = document.getElementById('lbImg');
-        const lbClose = document.getElementById('lbClose');
-
-        function open(src) {
-            lbImg.src = src;
-            lb.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function close() {
-            lb.classList.remove('open');
-            lbImg.src = '';
-            document.body.style.overflow = '';
-        }
-
-        document.addEventListener('click', function (e) {
-            const t = e.target;
-            if (t && t.classList && t.classList.contains('thumb')) {
-                open(t.getAttribute('data-full') || t.src);
-            } else if (t === lb || t === lbClose) {
-                close();
+            function open(src) {
+                lbImg.src = src;
+                lb.classList.add('open');
+                document.body.style.overflow = 'hidden';
             }
-        });
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && lb.classList.contains('open')) close();
-        });
-    })();
-</script>
+
+            function close() {
+                lb.classList.remove('open');
+                lbImg.src = '';
+                document.body.style.overflow = '';
+            }
+
+            document.addEventListener('click', function (e) {
+                const t = e.target;
+                if (t && t.classList && t.classList.contains('thumb')) {
+                    open(t.getAttribute('data-full') || t.src);
+                } else if (t === lb || t === lbClose) {
+                    close();
+                }
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && lb.classList.contains('open')) close();
+            });
+        })();
+    </script>
 </body>
 </html>
 {{ end }}
