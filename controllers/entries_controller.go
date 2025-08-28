@@ -83,7 +83,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 		}
 
 		// redirect to view with log=false
-		loc := "/view/" + url.PathEscape(key) + "?log=false"
+		loc := "/view/" + url.PathEscape(key) + "/" + HashString(recipientName)
 		c.Redirect(http.StatusSeeOther, loc)
 	}
 }
@@ -116,7 +116,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			if hashedRecipient != hashedName {
 				log.Println(hashedRecipient)
 				log.Println(hashedName)
-				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误"})
+				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误", "Key": key})
 				return
 			}
 
@@ -134,6 +134,8 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 				"data":      parsedJsonData,
 				"raw":       string(rawJson),
 			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "no data no error"})
 		}
 	}
 }
@@ -149,8 +151,10 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 			return
 		}
 		//判断key是否创建
+		//todo 读取收件人cookie，如果已经存在了就直接加上hash过的收件人，直接进数据页，否则要求先输入一次
+
 		if entries.HasData(key) { //创建了跳转到展示页
-			c.Redirect(303, "/view/"+key)
+			c.Redirect(303, "/lookup/"+key)
 		} else { //没创建跳转到创建页
 			c.Redirect(303, "/create/"+key)
 		}
