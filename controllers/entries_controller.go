@@ -59,7 +59,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			_ = f.Close() // 立即关闭，避免在循环里 defer 堆积
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				log.Print(err)
+				log.Print("save image Failed", err)
 				return
 			}
 

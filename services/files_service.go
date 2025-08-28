@@ -27,75 +27,86 @@ import (
 type FilesService struct{ dataDir string }
 
 func NewFilesService(dataDir string) *FilesService { return &FilesService{dataDir: dataDir} }
-
 func (s *FilesService) SaveImage(key string, file multipart.File, removeExif bool) (string, error) {
 	if !models.ValidKey(key) {
 		return "", errors.New("invalid key format")
 	}
+	defer file.Close()
 
-	// ---- 1) 读入内存并限制大小（防止 OOM）----
 	const maxUpload = int64(40 << 20) // 40MB
-	lr := io.LimitReader(file, maxUpload+1)
+
+	// 只读前 8KB 判断 MIME
+	header := make([]byte, 8192)
+	n, err := io.ReadFull(io.LimitReader(file, int64(len(header))), header)
+	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		return "", fmt.Errorf("read header failed: %w", err)
+	}
+	header = header[:n]
+
+	mediaType, err := detectMime(header)
+	if err != nil {
+		return "", fmt.Errorf("unsupported file type: %w", err)
+	}
+	log.Printf("detected media type: %s", mediaType)
+
+	// 确保目录存在
+	dir := filepath.Join(s.dataDir, "entries", key, "images")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", fmt.Errorf("mkdir failed: %w", err)
+	}
+
+	// 把整个文件读到内存（仍然限制大小）
+	lr := io.LimitReader(io.MultiReader(bytes.NewReader(header), file), maxUpload+1)
 	buf, err := io.ReadAll(lr)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("read file failed: %w", err)
 	}
 	if int64(len(buf)) > maxUpload {
 		return "", errors.New("file too large")
 	}
 
-	// ---- 2) MIME 粗判 ----
-	mediaType, err := detectMime(buf)
+	// 解码图片
+	img, err := decodeImage(buf, mediaType)
 	if err != nil {
-		return "", errors.New("unsupported file type: " + mediaType)
-	}
-	log.Println(mediaType)
-	// ---- 3) 确保目录存在 ----
-	dir := filepath.Join(s.dataDir, "entries", key, "images")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		log.Println(err)
 		return "", err
 	}
 
-	// ---- 4) 解码为 image.Image（HEIC/AVIF 单独走 libheif）----
-	var img image.Image
-	// 优先用 go-webp 解码（若输入本身是 WebP）
-	if mediaType == "image/webp" || hasWebPMagic(buf) {
-		img, err = webp.Decode(bytes.NewReader(buf), &decoder.Options{})
-		// go-webp 用法参考官方示例。:contentReference[oaicite:1]{index=1}
-	}
-	// 回退到标准库（gif/jpeg/png）
-	if img == nil && err == nil {
-		img, _, err = image.Decode(bytes.NewReader(buf))
-	}
-	// （可选）再次回退：HEIC/HEIF/AVIF（需要系统已安装 libheif 及解码插件）
-	if img == nil && err != nil && (mediaType == "image/heic" || mediaType == "image/heif" || mediaType == "image/avif") {
-		img, err = DecodeFromBytes(buf)
-	}
-
-	if err != nil || img == nil {
-		return "", err
-	}
-
-	// ---- 5) 统一编码为 WebP ----
+	// 生成文件名
 	name := uuid.New().String() + ".webp"
 	abs := filepath.Join(dir, name)
+
 	dst, err := os.Create(abs)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("create file failed: %w", err)
 	}
 	defer dst.Close()
 
-	options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
-	if err != nil {
-		return "", err
-	}
-
+	// webp 画质
+	options, _ := encoder.NewLossyEncoderOptions(encoder.PresetPhoto, 75)
 	if err := webp.Encode(dst, img, options); err != nil {
-		return "", err
+		return "", fmt.Errorf("webp encode failed: %w", err)
 	}
 
 	return name, nil
+}
+
+// decodeImage 根据类型选择解码器
+func decodeImage(buf []byte, mediaType string) (image.Image, error) {
+	switch mediaType {
+	case "image/heic", "image/heif", "image/avif": //需要测试avif是否实际支持
+		return DecodeFromBytes(buf)
+	case "image/webp":
+		return webp.Decode(bytes.NewReader(buf), &decoder.Options{})
+	default:
+		if hasWebPMagic(buf) {
+			return webp.Decode(bytes.NewReader(buf), &decoder.Options{})
+		}
+		img, _, err := image.Decode(bytes.NewReader(buf))
+		if err != nil {
+			return nil, fmt.Errorf("std decode failed: %w", err)
+		}
+		return img, nil
+	}
 }
 
 // --- Helpers ---
@@ -131,4 +142,11 @@ func DecodeFromBytes(buf []byte) (image.Image, error) {
 
 	// 转成 Go 的 image.Image
 	return img.GetImage()
+}
+func detectMime(data []byte) (string, error) {
+	mtype := mimetype.Detect(data)
+	if !strings.HasPrefix(mtype.String(), "image/") {
+		return "", fmt.Errorf("unsupported content type: %s", mtype.String())
+	}
+	return mtype.String(), nil
 }
