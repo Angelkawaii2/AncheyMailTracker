@@ -4,49 +4,30 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="/styles/style.css">
-    <script
-            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            async
-            defer
-    ></script>
+
 </head>
 <body>
     <div class="wrap">
         <form class="card" action="/lookup" method="post">
             <div>
                 <h1>安洁露邮件溯源查询系统</h1>
-                <p>该系统用于追溯明信片、信件、快递包裹等寄送时的状态</p>
-                <p>建议直接扫描邮件二维码查询，或手动输入：</p>
+                <p>该系统用于追溯明信片、信件、快递包裹等发出的状态</p>
+                <p>请扫描邮件二维码查询，或手动输入：</p>
             </div>
-            <label for="id"> ID: </label>
-            <input id="id" name="id" type="text">
-            <label for="name"> 收件人: </label>
-            <input id="name" name="id" type="text" placeholder="默认为收信人名称">
-            <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-callback="onTurnstileSuccess"></div>
-            <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
+            <button class="btn" type="button" onclick="location.href='/view/'">查询邮件</button>
         </form>
 
         {{if .Authenticated}}
-        <form class="card" action="/lookup" method="post">
+        <div class="card">
             <h2>管理员工具</h2>
             <div class="row">
                 <button class="btn" type="button" onclick="location.href='/create/'">创建记录</button>
                 <button class="btn" type="button" onclick="location.href='/admin/keys/generate'">创建Key</button>
                 <button class="btn" type="button" onclick="location.href='/admin/keys'">查看所有key</button>
             </div>
-        </form>
-
-
-
+        </div>
         {{end}}
     </div>
-    <script>
-        function onTurnstileSuccess(token) {
-            // Turnstile 验证成功后启用按钮
-            let btn = document.getElementById("submitBtn");
-            btn.disabled = false;
-            btn.textContent = "查询"
-        }
-    </script>
+
 </body>
 </html>

@@ -1,0 +1,38 @@
+{{ define "view_check.html" }}
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>查看表单 {{ .Key }}</title>
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer
+    ></script>
+</head>
+<body>
+    <div class="wrap">
+        <form class="card">
+            <h1 style="text-align: center">查询{{ .Key }}</h1>
+            <label for="id"> ID: </label>
+            <input id="id" name="id" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+            <label for="name"> 收件人: </label>
+            <input id="name" name="id" type="text" placeholder="默认为收信人名称">
+            <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"
+                 data-callback="onTurnstileSuccess"></div>
+            <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
+        </form>
+    </div>
+    <script>
+        function onTurnstileSuccess(token) {
+            // Turnstile 验证成功后启用按钮
+            let btn = document.getElementById("submitBtn");
+            btn.disabled = false;
+            btn.textContent = "查询"
+        }
+    </script>
+</body>
+</html>
+{{ end }}

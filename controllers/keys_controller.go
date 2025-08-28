@@ -87,8 +87,6 @@ func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.
 			})
 		}
 		log.Print(out)
-		//todo 优化展示模板
-		//c.JSON(http.StatusOK, gin.H{"items": out})
 		c.HTML(http.StatusOK, "key_view.html", out)
 	}
 }

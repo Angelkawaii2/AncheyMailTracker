@@ -125,8 +125,15 @@ func main() {
 		api.GET("/s/:key", controllers.GetEntryRouteView(entriesSvc, keysSvc))
 		// Fetch entry data by key (and record UA to history.json if it exists)
 		api.POST("/entry", controllers.PostEntry(entriesSvc, fileSrvc, keysSvc))
-		// Optional SSR view (using template), not required by the spec but provided
-		api.GET("/view/:key", controllers.GetEntryView(entriesSvc))
+		//视图落地页，没有密码时要求用户输入
+		viewCheckHandler := func(c *gin.Context) {
+			key := c.Param("key")
+			c.HTML(http.StatusOK, "view_check.html", gin.H{"Key": key})
+		}
+		api.GET("/view/", viewCheckHandler)
+		api.GET("/view/:key", viewCheckHandler)
+		//视图实际加载页
+		api.GET("/view/:key/:hashedRecipient", controllers.GetEntryView(entriesSvc))
 	}
 
 	addr := getEnvDefault("ADDR", ":8080")

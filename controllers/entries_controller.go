@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"mailtrackerProject/models"
@@ -89,12 +91,32 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
+		hashedRecipient := c.Param("hashedRecipient")
+
 		data, err := entries.LoadData(key)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"error": err})
 			return
 		}
+
 		if data != nil {
+
+			rawJson, _ := json.Marshal(data)
+			var parsedJsonData map[string]any
+			if err := json.Unmarshal(data.Data, &parsedJsonData); err != nil {
+				log.Print(err)
+			}
+
+			name := parsedJsonData["recipientName"].(string)
+			hashedName := HashString(name)
+			//校验失败，重定向回验证页
+			if hashedRecipient != hashedName {
+				log.Println(hashedRecipient)
+				log.Println(hashedName)
+				c.Redirect(http.StatusSeeOther, "/view/"+url.PathEscape(key))
+				return
+			}
+
 			doLog := c.Query("log")
 			if doLog == "true" {
 				// Record UA only if history.json exists for this key
@@ -102,11 +124,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 				ip := models.ClientIP(c.Request)
 				_ = entries.RecordUAIfHistoryExists(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
 			}
-			rawJson, _ := json.Marshal(data)
-			var parsedJsonData map[string]any
-			if err := json.Unmarshal(data.Data, &parsedJsonData); err != nil {
-				log.Print(err)
-			}
+
 			c.HTML(http.StatusOK, "view.html", gin.H{
 				"Key":       key,
 				"CreatedAt": data.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -134,4 +152,9 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 			c.Redirect(303, "/create/"+key)
 		}
 	}
+}
+func HashString(s string) string {
+	h := sha256.New()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil))
 }
