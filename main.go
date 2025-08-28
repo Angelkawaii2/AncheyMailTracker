@@ -130,8 +130,8 @@ func main() {
 			key := c.Param("key")
 			c.HTML(http.StatusOK, "view_check.html", gin.H{"Key": key})
 		}
-		api.GET("/view/", viewCheckHandler)
-		api.GET("/view/:key", viewCheckHandler)
+		api.GET("/lookup/", viewCheckHandler)
+		api.GET("/lookup/:key", viewCheckHandler)
 		//视图实际加载页
 		api.GET("/view/:key/:hashedRecipient", controllers.GetEntryView(entriesSvc))
 	}

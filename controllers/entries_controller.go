@@ -92,10 +92,13 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 		hashedRecipient := c.Param("hashedRecipient")
+		//todo 检测cf验证码
 
 		data, err := entries.LoadData(key)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"error": err})
+			//key不存在
+			//c.JSON(http.StatusOK, gin.H{"error": err})
+			c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key"})
 			return
 		}
 
@@ -113,7 +116,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			if hashedRecipient != hashedName {
 				log.Println(hashedRecipient)
 				log.Println(hashedName)
-				c.Redirect(http.StatusSeeOther, "/view/"+url.PathEscape(key))
+				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误"})
 				return
 			}
 

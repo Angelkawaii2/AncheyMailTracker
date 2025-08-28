@@ -14,23 +14,43 @@
 </head>
 <body>
     <div class="wrap">
-        <form class="card">
+        <div class="card">
             <h1 style="text-align: center">查询{{ .Key }}</h1>
-            <label for="id"> ID: </label>
-            <input id="id" name="id" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+            {{if .error}}
+            <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
+            {{end}}
+            <label for="keyid"> ID: </label>
+            <input id="keyid" name="id" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
             <label for="name"> 收件人: </label>
-            <input id="name" name="id" type="text" placeholder="默认为收信人名称">
+            <input id="name" name="name" type="text" placeholder="默认为收信人名称">
             <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"
                  data-callback="onTurnstileSuccess"></div>
-            <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
-        </form>
+            <button id="submitBtn" class="btn" type="button" onclick="handleVerification()" disabled>验证中...</button>
+        </div>
     </div>
     <script>
+        async function handleVerification() {
+            const id = document.getElementById("keyid").value
+            const name = document.getElementById("name").value
+            const hashed = await hashString(name)
+            let target = `/view/${id}/${hashed}`;
+            console.log("id", id, "targ", target)
+            location.href = target
+        }
+
         function onTurnstileSuccess(token) {
             // Turnstile 验证成功后启用按钮
             let btn = document.getElementById("submitBtn");
             btn.disabled = false;
             btn.textContent = "查询"
+        }
+
+        async function hashString(str) {
+            const data = new TextEncoder().encode(str); // UTF-8 编码
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(b => b.toString(16).padStart(2, "0"))
+                .join("");
         }
     </script>
 </body>
