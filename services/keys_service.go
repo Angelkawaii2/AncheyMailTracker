@@ -15,6 +15,7 @@ import (
 type KeyInfo struct {
 	Key       string    `json:"key"`
 	CreatedAt time.Time `json:"created_at"`
+	Comment   string    `json:"comment"`
 }
 
 type KeysService struct {
@@ -70,7 +71,7 @@ func (s *KeysService) flushLocked() error {
 	return os.Rename(tmp, s.filePath)
 }
 
-func (s *KeysService) Generate(n int, length int) ([]KeyInfo, error) {
+func (s *KeysService) Generate(n int, length int, comment string) ([]KeyInfo, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -108,7 +109,7 @@ func (s *KeysService) Generate(n int, length int) ([]KeyInfo, error) {
 			return nil, errors.New("failed to generate unique key without collision")
 		}
 
-		ki := KeyInfo{Key: k, CreatedAt: time.Now()}
+		ki := KeyInfo{Key: k, CreatedAt: time.Now(), Comment: comment}
 		// 先写入内存；若 flush 失败我们会回滚
 		s.keys[k] = ki
 		newKeys = append(newKeys, k)

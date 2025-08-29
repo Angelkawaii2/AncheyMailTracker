@@ -16,6 +16,7 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 
 		q, err := strconv.Atoi(c.PostForm("quantity"))
 		length, err := strconv.Atoi(c.PostForm("length"))
+		comment := c.PostForm("length")
 
 		if q <= 0 || q > 1000000 {
 			c.HTML(http.StatusBadRequest, "key_gen.html", gin.H{"error": "invalid count"})
@@ -26,7 +27,7 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 			return
 		}
 
-		out, err := keys.Generate(q, length)
+		out, err := keys.Generate(q, length, comment)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -34,7 +35,6 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 		}
 		ids := make([]string, 0, len(out))
 		for _, item := range out {
-			log.Println(item.Key)
 			ids = append(ids, item.Key)
 		}
 
@@ -42,12 +42,14 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 		type EntryView struct {
 			Key       string
 			CreatedAt string
+			Comment   string
 		}
 		views := make([]EntryView, len(out))
 		for i, e := range out {
 			views[i] = EntryView{
 				Key:       e.Key,
 				CreatedAt: e.CreatedAt.Format("2006-01-02 15:04:05"),
+				Comment:   comment,
 			}
 		}
 

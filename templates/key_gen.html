@@ -8,43 +8,45 @@
     <link rel="stylesheet" href="/styles/style.css">
 </head>
 <body>
-    <div class="wrap">
-        <form class="card" method="post">
-            <h1>创建Key</h1>
+<div class="wrap">
+    <form class="card" method="post">
+        <h1>创建Key</h1>
 
-            {{ if .error }}
-            <div>
-                <h4>错误</h4>
-                <p>{{ .error }}</p>
-            </div>
-            {{end}}
-
-            <label for="quantity">数量</label>
-            <input class="input" type="number" id="quantity" name="quantity" min="1" max="1000" step="1" value="10">
-            <label for="length">长度</label>
-            <input class="input" type="number" id="length" name="length" min="6" max="20" step="1" value="6">
-            <button class="btn" type="submit">生成</button>
-        </form>
-
-
-        {{ if .keys}}
-        <div class="card">
-            <h3>生成结果</h3>
-            <table>
-                <tr>
-                    <td>ID</td>
-                    <td>生成时间</td>
-                </tr>
-                {{range .keys}}
-                <tr>
-                    <td class="keyid"> {{.Key}}</td>
-                    <td> {{ .CreatedAt}}</td>
-                </tr>
-                {{end}}
-            </table>
+        {{ if .error }}
+        <div>
+            <h4>错误</h4>
+            <p>{{ .error }}</p>
         </div>
         {{end}}
+
+        <label for="quantity">数量</label>
+        <input class="input" type="number" id="quantity" name="quantity" min="1" max="1000" step="1" value="10">
+        <label for="length">长度</label>
+        <input class="input" type="number" id="length" name="length" min="6" max="20" step="1" value="6">
+        <label for="comment">备注</label>
+        <input class="input" type="text" id="comment" name="comment" placeholder="标注这些key的用途">
+        <button class="btn" type="submit">生成</button>
+    </form>
+
+
+    {{ if .keys}}
+    <div class="card">
+        <h3>生成结果</h3>
+        <table>
+            <tr>
+                <td>ID</td>
+                <td>生成时间</td>
+            </tr>
+            {{range .keys}}
+            <tr>
+                <td class="keyid"> {{.Key}}</td>
+                <td> {{ .CreatedAt}}</td>
+            </tr>
+            {{end}}
+        </table>
     </div>
+    {{end}}
+</div>
 </body>
 </html>
 {{ end }}
