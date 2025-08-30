@@ -37,6 +37,11 @@ func main() {
 		}
 	}
 
+	cfToken := os.Getenv("CF_TURNSTILE_SECRET")
+	if cfToken == "" {
+		log.Fatalf("CF_TURNSTILE_SECRET not set")
+	}
+
 	// Services
 	keysSvc := services.NewKeysService(filepath.Join(dataDir, "keys.json"))
 	if err := keysSvc.Load(); err != nil {
@@ -132,6 +137,29 @@ func main() {
 		}
 		api.GET("/lookup/", viewCheckHandler)
 		api.GET("/lookup/:key", viewCheckHandler)
+
+		api.POST("/lookup/:key", func(c *gin.Context) {
+			key := c.Param("key")
+			token := c.PostForm("cf-turnstile-response")
+			if token == "" {
+				c.String(http.StatusBadRequest, "missing turnstile response")
+				return
+			}
+			//检查验证码
+			v, err := services.VerifyTurnstile(c, token, c.ClientIP())
+			if err != nil || !v.Success {
+				// fail-closed：失败直接回到表单页并提示
+				//c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效验证码token", "msg": err})
+				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"test": "verify success!", "key": key, "token": token})
+
+			//写jwt
+
+			return
+		})
+
 		//视图实际加载页
 		api.GET("/view/:key/:hashedRecipient", controllers.GetEntryView(entriesSvc))
 	}

@@ -16,7 +16,7 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 
 		q, err := strconv.Atoi(c.PostForm("quantity"))
 		length, err := strconv.Atoi(c.PostForm("length"))
-		comment := c.PostForm("length")
+		comment := c.PostForm("comment")
 
 		if q <= 0 || q > 1000000 {
 			c.HTML(http.StatusBadRequest, "key_gen.html", gin.H{"error": "invalid count"})
