@@ -74,13 +74,21 @@ func main() {
 	r.Static("/styles", "./styles")
 
 	r.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html",
-			gin.H{
-				"Redirect": c.Query("go"),
-			})
+		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
 	})
 
-	r.POST("/login", func(c *gin.Context) {
+	r.POST("/login", middleware.TurnstileGuard(middleware.TurnstileConfig{
+		Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
+			res, err := services.VerifyTurnstile(c, token, ip)
+			return middleware.Result{Success: err == nil && res.Success}, err
+		},
+		OnFail: func(c *gin.Context, err error) {
+			// 失败统一回到验证页（带上 SiteKey）
+			fmt.Println(err)
+			helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
+			return
+		},
+	}), func(c *gin.Context) {
 		password := c.PostForm("password")
 		adminToken := os.Getenv("ADMIN_TOKEN")
 
@@ -89,9 +97,9 @@ func main() {
 			target = "/"
 		}
 
-		if password != adminToken {
-			c.HTML(http.StatusUnauthorized, "login.html", gin.H{
-				"Error": "密码错误",
+		if subtle.ConstantTimeCompare([]byte(password), []byte(adminToken)) != 1 {
+			helper.RenderHTML(c, http.StatusUnauthorized, "login.html", gin.H{
+				"Error": "账号或密码错误",
 			})
 			return
 		}

@@ -5,19 +5,67 @@
     <title>登录</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="/styles/style.css">
+    <script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer
+    ></script>
 </head>
 <body>
     <div class="wrap">
-        <form class="card" method="post" action="/login">
+        <form class="card" id="loginForm" method="post" action="/login">
             <h2>登录</h2>
             {{if .Error}}
             <p style="color:red;">{{.Error}}</p>
             {{end}}
             <input type="hidden" name="redirect" value="{{.Redirect}}">
+
             <label for="passwd">Admin Token</label>
             <input id="passwd" class="input" type="password" name="password" required>
-            <button class="btn" type="submit">登录</button>
+
+            <div class="cf-turnstile" data-sitekey="{{.SiteKey}}"
+                 data-callback="onTurnstileSuccess"></div>
+
+            <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
         </form>
     </div>
+
+    <script>
+        let turnstileOk = false;
+
+        // Turnstile 验证成功
+        function onTurnstileSuccess(token) {
+            turnstileOk = true;
+            updateButtonState();
+        }
+
+        // 输入框变化时检查
+        document.getElementById("passwd").addEventListener("input", updateButtonState);
+
+        // 允许按 Enter 提交
+        document.getElementById("passwd").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                let btn = document.getElementById("submitBtn");
+                if (!btn.disabled) {
+                    document.getElementById("loginForm").submit();
+                } else {
+                    e.preventDefault(); // 阻止无效提交
+                }
+            }
+        });
+
+        function updateButtonState() {
+            let btn = document.getElementById("submitBtn");
+            let passwd = document.getElementById("passwd").value.trim();
+
+            if (turnstileOk && passwd.length > 0) {
+                btn.disabled = false;
+                btn.textContent = "登录";
+            } else {
+                btn.disabled = true;
+                btn.textContent = turnstileOk ? "请输入密码" : "验证中...";
+            }
+        }
+    </script>
 </body>
 </html>
