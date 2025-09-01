@@ -128,8 +128,16 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 		if entries.HasData(key) { //创建了跳转到展示页
 			c.Redirect(303, "/lookup/"+key)
 		} else { //没创建跳转到创建页
-			//todo create的controller应提示还没启用，要启用再跳转到登录页
-			c.Redirect(303, "/create/"+key)
+			//如果不是管理员
+			token, err := c.Cookie("X-Admin-Token")
+			if err != nil || token == "" {
+				//提示该key未启用，是否现在启用
+				//如果要启用才让用户登录
+				c.HTML(http.StatusOK, "key_not_enable.html", gin.H{"Key": key})
+			} else {
+				//（可能）是管理员就跳转，鉴权由create的中间件处理
+				c.Redirect(303, "/create/"+key)
+			}
 		}
 	}
 }

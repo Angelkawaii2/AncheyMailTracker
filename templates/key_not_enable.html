@@ -1,0 +1,24 @@
+{{ define "key_not_enable.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Key 未启用</title>
+    <link rel="stylesheet" href="/styles/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h1>安洁露邮件溯源查询系统</h1>
+            <p>密钥 <strong>{{ .Key }}</strong> 尚未启用。</p>
+            <p class="small" style="color: gray">
+                管理员请
+                <button class="btn" onclick="location.href='/create/{{.Key}}'">点击这里登录</button>
+                启用该 Key。
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+{{end}}

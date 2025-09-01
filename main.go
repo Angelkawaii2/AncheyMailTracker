@@ -49,6 +49,7 @@ func main() {
 		}
 	}
 
+	//验证码相关设置
 	cfToken := os.Getenv("CF_TURNSTILE_SECRET")
 	cfSiteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
 	if cfToken == "" || cfSiteKey == "" {
