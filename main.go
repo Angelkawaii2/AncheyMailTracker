@@ -22,11 +22,7 @@ import (
 )
 
 func main() {
-	dataDir := os.Getenv("DATA_DIR")
-
-	if dataDir == "" {
-		log.Fatalf("$DATA_DIR environment variable not set")
-	}
+	dataDir := "./data"
 
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		log.Fatalf("cannot create DATA_DIR: %v", err)

@@ -47,6 +47,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY --from=builder /out/app /app/app
+# ★ 把模板与静态资源一并拷入
+COPY --from=builder /app/templates /app/templates
+COPY --from=builder /app/styles    /app/styles
+
 ENV GIN_MODE=release
 EXPOSE 8080
 ENTRYPOINT ["/app/app"]

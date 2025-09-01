@@ -4,14 +4,14 @@ services:
     build:
       context: .               # 以项目根目录为构建上下文
       target: dev              # 使用 Dockerfile 的 dev 阶段
-      # <<: *defaults          # 如需强制 amd64，取消注释
-    image: ancheymailtracker-dev         # 本地开发镜像名（可改）
+    image: ancheymailtracker:dev         # 本地开发镜像名（可改）
     working_dir: /app
     volumes:
       - .:/app:cached          # 将当前项目挂载进容器（热重载依赖这个）
       - gocache:/go/pkg/mod    # Go module 缓存
       - gobuild:/root/.cache/go-build  # Go build 缓存
     env_file:
+      - .env
       - .env.development
       - .env.dev.local
     ports:
@@ -21,7 +21,7 @@ services:
     # command: ["dlv", "debug", "--headless", "--listen=:2345", "--api-version=2", "--accept-multiclient", "--", "-http=:8080"]
     # healthcheck 可选：确保容器就绪时才被视为 healthy（按你的健康检查接口调整）
     healthcheck:
-      test: ["CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/health || exit 1"]
+      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/health || exit 1" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -33,18 +33,16 @@ services:
       context: .
       target: runtime          # 使用 Dockerfile 的 runtime 阶段
       # <<: *defaults
-    image: yourapp:prod        # 生产镜像名（用于本机验证或推仓库）
-    environment:
-      - PORT=8080
-      - GIN_MODE=release
+    image: ancheymailtracker:prod         # 生产镜像名（用于本机验证或推仓库）
+    env_file:
+      - .env
+      - .env.dev.local
     ports:
       - "8080:8080"
     # 生产容器通常不需要挂源码卷
     restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_started # 仅示例；真实部署时可移除 app 服务，单独运行 app-prod
-
+    volumes:
+      - ./data:/app/data:rw
 volumes:
   gocache:
   gobuild:
