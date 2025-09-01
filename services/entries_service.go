@@ -13,9 +13,17 @@ import (
 
 // 附加的属性，发信时间在表单data里
 type EntryEnvelope struct {
-	Data      json.RawMessage `json:"data"`
-	CreatedAt time.Time       `json:"created_at"`
+	Data      EntryData `json:"data"`
+	CreatedAt time.Time `json:"created_at"`
 	// schema_version could be added later if needed
+}
+
+type EntryData struct {
+	Images         *[]string `json:"images,omitempty"`         // 可选数组
+	OriginLocation *string   `json:"originLocation,omitempty"` // 可选字符串
+	PostDate       *string   `json:"postDate,omitempty"`       // 用 *string 保存原始日期，再转 time.Time
+	RecipientName  *string   `json:"recipientName,omitempty"`
+	Remarks        *string   `json:"remarks,omitempty"`
 }
 
 type HistoryRecord struct {
@@ -42,9 +50,7 @@ func (s *EntriesService) historyPath(key string) string {
 	return filepath.Join(s.entryDir(key), "history.json")
 }
 
-// SaveData stores raw JSON under entries/<key>/entry.json and creates per-key dir if needed.
-// Also ensures the key must exist (pre-generated).
-func (s *EntriesService) SaveData(key string, raw json.RawMessage) error {
+func (s *EntriesService) SaveData(key string, data EntryData) error {
 	if !models.ValidKey(key) {
 		return errors.New("invalid key")
 	}
@@ -58,12 +64,7 @@ func (s *EntriesService) SaveData(key string, raw json.RawMessage) error {
 	// prepare envelope
 	now := time.Now()
 
-	var data EntryEnvelope
-	err := json.Unmarshal(raw, &data)
-	if err != nil {
-		return err
-	}
-	env := EntryEnvelope{Data: raw, CreatedAt: now}
+	env := EntryEnvelope{Data: data, CreatedAt: now}
 
 	if err := os.MkdirAll(s.entryDir(key), 0o755); err != nil {
 		return err

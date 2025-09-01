@@ -9,6 +9,7 @@ import (
 	"mailtrackerProject/services"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -69,36 +70,37 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			imageIDs = append(imageIDs, fileName)
 		}
 
-		payload := map[string]any{
-			"recipientName":  recipientName,
-			"remarks":        remarks,
-			"images":         imageIDs, // 由单图 image → 多图 images
-			"postDate":       postDate,
-			"originLocation": originLocation,
+		data := services.EntryData{
+			RecipientName:  &recipientName,
+			Remarks:        &remarks,
+			Images:         &imageIDs,
+			OriginLocation: &originLocation,
+			PostDate:       &postDate,
 		}
-		raw, _ := json.Marshal(payload)
-		if err := entries.SaveData(key, raw); err != nil {
+
+		if err := entries.SaveData(key, data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
-		// redirect to view with log=false
+		//todo 重定向到目标页面
 		loc := "/view/" + url.PathEscape(key) + "/" + HashString(recipientName)
 		c.Redirect(http.StatusSeeOther, loc)
 	}
 }
 
+// todo 实际的页面，需要鉴权（或者用中间件？
 func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 		hashedRecipient := c.Param("hashedRecipient")
-		//todo 检测cf验证码
+		//注入页面用
+		siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
 
 		data, err := entries.LoadData(key)
 		if err != nil {
 			//key不存在
 			//c.JSON(http.StatusOK, gin.H{"error": err})
-			c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key"})
+			c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key", "SiteKey": siteKey})
 			return
 		}
 
@@ -116,7 +118,8 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			if hashedRecipient != hashedName {
 				log.Println(hashedRecipient)
 				log.Println(hashedName)
-				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误", "Key": key})
+				siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
+				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误", "Key": key, "SiteKey": siteKey})
 				return
 			}
 

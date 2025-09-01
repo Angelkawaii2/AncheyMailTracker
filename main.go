@@ -38,8 +38,9 @@ func main() {
 	}
 
 	cfToken := os.Getenv("CF_TURNSTILE_SECRET")
-	if cfToken == "" {
-		log.Fatalf("CF_TURNSTILE_SECRET not set")
+	cfSiteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
+	if cfToken == "" || cfSiteKey == "" {
+		log.Fatalf("CF_TURNSTILE_SITEKEY or CF_TURNSTILE_SECRET not set")
 	}
 
 	// Services
@@ -130,14 +131,18 @@ func main() {
 		api.GET("/s/:key", controllers.GetEntryRouteView(entriesSvc, keysSvc))
 		// Fetch entry data by key (and record UA to history.json if it exists)
 		api.POST("/entry", controllers.PostEntry(entriesSvc, fileSrvc, keysSvc))
+
+		siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
+
 		//视图落地页，没有密码时要求用户输入
 		viewCheckHandler := func(c *gin.Context) {
 			key := c.Param("key")
-			c.HTML(http.StatusOK, "view_check.html", gin.H{"Key": key})
+			c.HTML(http.StatusOK, "view_check.html", gin.H{"Key": key, "SiteKey": siteKey})
 		}
 		api.GET("/lookup/", viewCheckHandler)
 		api.GET("/lookup/:key", viewCheckHandler)
 
+		//查询表单提交点
 		api.POST("/lookup/:key", func(c *gin.Context) {
 			key := c.Param("key")
 			token := c.PostForm("cf-turnstile-response")
@@ -149,11 +154,20 @@ func main() {
 			v, err := services.VerifyTurnstile(c, token, c.ClientIP())
 			if err != nil || !v.Success {
 				// fail-closed：失败直接回到表单页并提示
-				//c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效验证码token", "msg": err})
-				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
+				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。", "SiteKey": siteKey})
 				return
 			}
+
+			//todo 写完后删掉
 			c.JSON(http.StatusOK, gin.H{"test": "verify success!", "key": key, "token": token})
+
+			//检查是否有权限访问
+
+			//访问目标key
+			entry := entriesSvc.LoadData(key)
+			if entry.Data {
+
+			}
 
 			//写jwt
 

@@ -2,3 +2,4 @@
 .idea
 data/
 tmp/**
+/.env.dev.local
