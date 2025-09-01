@@ -3,13 +3,12 @@ package controllers
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"log"
+	"mailtrackerProject/helper"
 	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -88,54 +87,43 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 	}
 }
 
-// todo 实际的页面，需要鉴权（或者用中间件？
+// todo 实际的展示页面，用中间件鉴权
 func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 		hashedRecipient := c.Param("hashedRecipient")
 		//注入页面用
-		siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
 
 		data, err := entries.LoadData(key)
 		if err != nil {
 			//key不存在
 			//c.JSON(http.StatusOK, gin.H{"error": err})
-			c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key", "SiteKey": siteKey})
+			helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key"})
 			return
 		}
 
 		if data != nil {
 
-			rawJson, _ := json.Marshal(data)
-			var parsedJsonData map[string]any
-			if err := json.Unmarshal(data.Data, &parsedJsonData); err != nil {
-				log.Print(err)
-			}
-
-			name := parsedJsonData["recipientName"].(string)
-			hashedName := HashString(name)
+			hashedName := HashString(*data.Data.RecipientName)
 			//校验失败，重定向回验证页
 			if hashedRecipient != hashedName {
-				log.Println(hashedRecipient)
-				log.Println(hashedName)
-				siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
-				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误", "Key": key, "SiteKey": siteKey})
+				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误"})
 				return
 			}
 
-			doLog := c.Query("log")
-			if doLog == "true" {
+			//todo 改为通过session或者cookie传入，当创建后第一次查询或者管理员查询就不记录
+			//doLog := c.Query("log")
+			if true {
 				// Record UA only if history.json exists for this key
 				ua := c.Request.UserAgent()
 				ip := models.ClientIP(c.Request)
 				_ = entries.RecordUAIfHistoryExists(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
 			}
 
-			c.HTML(http.StatusOK, "view.html", gin.H{
+			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
 				"Key":       key,
 				"CreatedAt": data.CreatedAt.Format("2006-01-02 15:04:05"),
-				"data":      parsedJsonData,
-				"raw":       string(rawJson),
+				"data":      data,
 			})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "no data no error"})
@@ -143,6 +131,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	}
 }
 
+// s/:key 的路由，在这里跳转创建或查询
 func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
@@ -154,11 +143,10 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 			return
 		}
 		//判断key是否创建
-		//todo 读取收件人cookie，如果已经存在了就直接加上hash过的收件人，直接进数据页，否则要求先输入一次
-
 		if entries.HasData(key) { //创建了跳转到展示页
 			c.Redirect(303, "/lookup/"+key)
 		} else { //没创建跳转到创建页
+			//todo create的controller应提示还没启用，要启用再跳转到登录页
 			c.Redirect(303, "/create/"+key)
 		}
 	}

@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"log"
 	"mailtrackerProject/controllers"
+	"mailtrackerProject/helper"
+	"mailtrackerProject/middleware"
 	"mailtrackerProject/services"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 
@@ -15,7 +16,12 @@ import (
 )
 
 func main() {
-	dataDir := getEnvDefault("DATA_DIR", "./data")
+	dataDir := os.Getenv("DATA_DIR")
+
+	if dataDir == "" {
+		log.Fatalf("$DATA_DIR environment variable not set")
+	}
+
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		log.Fatalf("cannot create DATA_DIR: %v", err)
 	}
@@ -94,8 +100,8 @@ func main() {
 			"Key": key,
 		})
 	}
-	r.GET("/create", authMiddleware(), createHandler)
-	r.GET("/create/:key", authMiddleware(), createHandler)
+	r.GET("/create", middleware.AdminAuthMiddleware(), createHandler)
+	r.GET("/create/:key", middleware.AdminAuthMiddleware(), createHandler)
 
 	// 首页
 	r.GET("/", func(c *gin.Context) {
@@ -115,7 +121,7 @@ func main() {
 		c.File(abs)
 	})
 
-	admin := r.Group("/admin", authMiddleware())
+	admin := r.Group("/admin", middleware.AdminAuthMiddleware())
 	{
 		//admin.GET('/')
 		admin.GET("/keys/generate", func(c *gin.Context) {
@@ -143,65 +149,41 @@ func main() {
 		api.GET("/lookup/:key", viewCheckHandler)
 
 		//查询表单提交点
-		api.POST("/lookup/:key", func(c *gin.Context) {
+		api.POST("/lookup/:key", middleware.TurnstileGuard(middleware.TurnstileConfig{
+			Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
+				res, err := services.VerifyTurnstile(c, token, ip)
+				return middleware.Result{Success: err == nil && res.Success}, err
+			},
+			OnFail: func(c *gin.Context, err error) {
+				// 失败统一回到验证页（带上 SiteKey）
+				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
+				return
+			},
+		}), func(c *gin.Context) {
 			key := c.Param("key")
-			token := c.PostForm("cf-turnstile-response")
-			if token == "" {
-				c.String(http.StatusBadRequest, "missing turnstile response")
-				return
-			}
-			//检查验证码
-			v, err := services.VerifyTurnstile(c, token, c.ClientIP())
-			if err != nil || !v.Success {
-				// fail-closed：失败直接回到表单页并提示
-				c.HTML(http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。", "SiteKey": siteKey})
-				return
-			}
 
-			//todo 写完后删掉
-			c.JSON(http.StatusOK, gin.H{"test": "verify success!", "key": key, "token": token})
-
-			//检查是否有权限访问
-
+			//业务鉴权，读取表单的收件人并做对比
 			//访问目标key
-			entry := entriesSvc.LoadData(key)
-			if entry.Data {
+			entry, err := entriesSvc.LoadData(key)
+			if err != nil {
+				//
+			}
+			if *entry.Data.RecipientName == "" {
 
 			}
 
-			//写jwt
+			//todo写jwt
 
 			return
 		})
 
 		//视图实际加载页
-		api.GET("/view/:key/:hashedRecipient", controllers.GetEntryView(entriesSvc))
+		api.GET("/view/:key/", controllers.GetEntryView(entriesSvc))
 	}
 
-	addr := getEnvDefault("ADDR", ":8080")
+	addr := os.Getenv("PORT")
 	log.Printf("listening on %s (DATA_DIR=%s)", addr, dataDir)
 	if err := r.Run(addr); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func getEnvDefault(k, def string) string {
-	if v := os.Getenv(k); v != "" {
-		return v
-	}
-	return def
-}
-
-// 鉴权中间件
-func authMiddleware() gin.HandlerFunc {
-	adminToken := os.Getenv("ADMIN_TOKEN")
-	return func(c *gin.Context) {
-		token, err := c.Cookie("X-Admin-Token")
-		if err != nil || token != adminToken {
-			c.Redirect(http.StatusSeeOther, "/login?go="+url.QueryEscape(c.Request.URL.Path))
-			c.Abort() //
-			return
-		}
-		c.Next()
 	}
 }
