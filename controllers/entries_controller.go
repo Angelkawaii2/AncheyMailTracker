@@ -97,11 +97,15 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			return
 		}
 
+		//获取访问记录
+		records, _ := entries.ReadUARecords(key)
+
 		if data != nil {
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
 				"Key":       key,
-				"CreatedAt": data.CreatedAt.Format("2006-01-02 15:04:05"),
+				"CreatedAt": data.CreatedAt,
 				"data":      data.Data,
+				"records":   records,
 			})
 			return
 		}

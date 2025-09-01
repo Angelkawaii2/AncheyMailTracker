@@ -117,7 +117,7 @@
                     <div class="meta-label">
                         <i class="fa-regular fa-clock"></i> 创建时间
                     </div>
-                    <div class="meta-value">{{ .CreatedAt }}</div>
+                    <div class="meta-value ts" data-ts="{{ .CreatedAt }}">{{ .CreatedAt }}</div>
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">
@@ -158,7 +158,7 @@
                     <div class="meta-label">
                         <i class="fa-regular fa-clock"></i> 创建时间
                     </div>
-                    <div class="meta-value">{{ .CreatedAt }}</div>
+                    <div class="meta-value ts" data-ts="{{ .CreatedAt }}">{{ .CreatedAt }}</div>
                 </div>
             </section>
             {{ end }}
@@ -168,6 +168,40 @@
                 <pre>{{ .raw }}</pre>
             </div>
         </div>
+
+        {{if .records}}
+        <h2>查询记录</h2>
+        {{ range .records }}
+        <div class="card">
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-clock"></i> 访问时间
+                </div>
+                <div class="meta-value">
+                    <time class="ts" data-ts="{{ .Time }}">{{.Time}}</time>
+                </div>
+            </div>
+
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-display"></i> 设备
+                    <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
+                </div>
+                <div class="meta-value">{{.UA}}</div>
+            </div>
+
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-network-wired"></i> IP地址
+                </div>
+                <div class="meta-value">{{.IP}}</div>
+            </div>
+
+        </div>
+        {{ end }}
+
+        {{end}}
+
     </div>
 
 
@@ -205,6 +239,11 @@
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape' && lb.classList.contains('open')) close();
+            });
+            document.querySelectorAll(".ts").forEach(el => {
+                const utc = el.dataset.ts; // "2025-09-01T08:45:00Z"
+                const d = new Date(utc);
+                el.textContent = d.toLocaleString("zh-cn"); // 用户当前时区/地区显示
             });
         })();
     </script>
