@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"mailtrackerProject/controllers"
 	"mailtrackerProject/helper"
@@ -149,30 +151,37 @@ func main() {
 		api.GET("/lookup/:key", viewCheckHandler)
 
 		//查询表单提交点
-		api.POST("/lookup/:key", middleware.TurnstileGuard(middleware.TurnstileConfig{
+		api.POST("/lookup/", middleware.TurnstileGuard(middleware.TurnstileConfig{
 			Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
 				res, err := services.VerifyTurnstile(c, token, ip)
 				return middleware.Result{Success: err == nil && res.Success}, err
 			},
 			OnFail: func(c *gin.Context, err error) {
 				// 失败统一回到验证页（带上 SiteKey）
+				fmt.Println(err)
 				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
 				return
 			},
 		}), func(c *gin.Context) {
-			key := c.Param("key")
+			key := c.PostForm("keyID")
+			recipientName := c.PostForm("recipientName")
 
 			//业务鉴权，读取表单的收件人并做对比
 			//访问目标key
 			entry, err := entriesSvc.LoadData(key)
 			if err != nil {
+				log.Println(err)
 				//
 			}
-			if *entry.Data.RecipientName == "" {
+			fmt.Println(entry)
 
+			name := entry.Data.RecipientName
+			if name == nil || *name == "" || subtle.ConstantTimeCompare([]byte(recipientName), []byte(*name)) != 1 {
+				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人核验失败，请检查输入是否正确（大小写、空格？）"})
+				return
 			}
 
-			//todo写jwt
+			//过鉴权，在这里写日志？
 
 			return
 		})

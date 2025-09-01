@@ -14,15 +14,15 @@
 </head>
 <body>
 <div class="wrap">
-    <form class="card" method="post" action="/lookup/:key">
+    <form class="card" method="post" action="/lookup/">
         <h1 style="text-align: center">查询{{ .Key }}</h1>
         {{if .error}}
         <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
         {{end}}
-        <label for="keyid"> ID: </label>
-        <input id="keyid" name="id" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+        <label for="keyID"> ID: </label>
+        <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
         <label for="name"> 收件人: </label>
-        <input id="name" name="name" type="text" placeholder="默认为收信人名称">
+        <input id="name" name="recipientName" type="text" placeholder="默认为收信人名称">
         <div class="cf-turnstile" data-sitekey="{{.SiteKey}}"
              data-callback="onTurnstileSuccess"></div>
         <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
