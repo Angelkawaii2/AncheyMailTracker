@@ -8,7 +8,6 @@ import (
 	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
-	"net/url"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,8 +80,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			return
 		}
 		//todo 重定向到目标页面
-		loc := "/view/" + url.PathEscape(key) + "/" + HashString(recipientName)
-		c.Redirect(http.StatusSeeOther, loc)
+		c.Redirect(http.StatusSeeOther, "/view/"+key)
 	}
 }
 
@@ -107,7 +105,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "unknown error"})
+		helper.RenderHTML(c, http.StatusInternalServerError, "view_check.html", gin.H{"error": "未知错误"})
 	}
 }
 

@@ -190,7 +190,7 @@ func main() {
 				// Record UA only if history.json exists for this key
 				ua := c.Request.UserAgent()
 				ip := models.ClientIP(c.Request)
-				_ = entriesSvc.RecordUA_NewlineJSON(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
+				_ = entriesSvc.RecorduaNewlinejson(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
 			}
 
 			// ========== JWT：读取 -> 解析 -> 追加 -> 回写 ==========

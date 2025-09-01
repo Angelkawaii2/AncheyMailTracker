@@ -11,11 +11,9 @@ import (
 	"time"
 )
 
-// 附加的属性，发信时间在表单data里
 type EntryEnvelope struct {
 	Data      EntryData `json:"data"`
 	CreatedAt time.Time `json:"created_at"`
-	// schema_version could be added later if needed
 }
 
 type EntryData struct {
@@ -24,12 +22,6 @@ type EntryData struct {
 	PostDate       *string   `json:"postDate,omitempty"`       // 用 *string 保存原始日期，再转 time.Time
 	RecipientName  *string   `json:"recipientName,omitempty"`
 	Remarks        *string   `json:"remarks,omitempty"`
-}
-
-type HistoryRecord struct {
-	Time time.Time `json:"time"`
-	UA   string    `json:"ua"`
-	IP   string    `json:"ip"`
 }
 
 type EntriesService struct {
@@ -103,23 +95,4 @@ func (s *EntriesService) HasData(key string) bool {
 	}
 	_, err := os.Stat(s.entryPath(key))
 	return err == nil
-}
-
-func (s *EntriesService) RecordUA_NewlineJSON(key string, rec HistoryRecord) error {
-	hp := s.historyPath(key)
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if err := os.MkdirAll(filepath.Dir(hp), 0o755); err != nil {
-		return err
-	}
-	f, err := os.OpenFile(hp, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	enc := json.NewEncoder(f)
-	return enc.Encode(rec) // 每条一行
 }
