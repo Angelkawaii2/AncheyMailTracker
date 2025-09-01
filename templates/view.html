@@ -123,31 +123,31 @@
                     <div class="meta-label">
                         <i class="fa-solid fa-calendar-day"></i> 邮戳时间
                     </div>
-                    <div class="meta-value">{{ .data.postDate }}</div>
+                    <div class="meta-value">{{ .data.PostDate }}</div>
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">
                         <i class="fa-solid fa-user"></i> 收件人
                     </div>
-                    <div class="meta-value">{{ .data.recipientName }}</div>
+                    <div class="meta-value">{{ .data.RecipientName }}</div>
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">
                         <i class="fa-solid fa-location-dot"></i> 发件地点
                     </div>
-                    <div class="meta-value">{{ .data.originLocation }}</div>
+                    <div class="meta-value">{{ .data.OriginLocation }}</div>
                 </div>
                 <div class="meta-item" style="grid-column: 1 / -1;">
                     <div class="meta-label">
                         <i class="fa-regular fa-note-sticky"></i> 备注
                     </div>
-                    <div class="meta-value">{{ .data.remarks }}</div>
+                    <div class="meta-value">{{ .data.Remarks }}</div>
                 </div>
             </section>
 
-            {{ if .data.images }}
+            {{ if .data.Images }}
             <div class="gallery">
-                {{ range .data.images }}
+                {{ range .data.Images }}
                 <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">
                 {{ end }}
             </div>

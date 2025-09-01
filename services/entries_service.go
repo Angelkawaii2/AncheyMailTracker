@@ -47,7 +47,7 @@ func (s *EntriesService) entryPath(key string) string {
 	return filepath.Join(s.entryDir(key), "entry.json")
 }
 func (s *EntriesService) historyPath(key string) string {
-	return filepath.Join(s.entryDir(key), "history.json")
+	return filepath.Join(s.entryDir(key), "history.ndjson")
 }
 
 func (s *EntriesService) SaveData(key string, data EntryData) error {
@@ -105,19 +105,21 @@ func (s *EntriesService) HasData(key string) bool {
 	return err == nil
 }
 
-// RecordUAIfHistoryExists appends a record to history.json only if the file already exists.
-func (s *EntriesService) RecordUAIfHistoryExists(key string, rec HistoryRecord) error {
+func (s *EntriesService) RecordUA_NewlineJSON(key string, rec HistoryRecord) error {
 	hp := s.historyPath(key)
-	if _, err := os.Stat(hp); err != nil { // doesn't exist, do nothing
-		return nil
-	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	var arr []HistoryRecord
-	if b, err := os.ReadFile(hp); err == nil && len(b) > 0 {
-		_ = json.Unmarshal(b, &arr)
+
+	if err := os.MkdirAll(filepath.Dir(hp), 0o755); err != nil {
+		return err
 	}
-	arr = append(arr, rec)
-	b, _ := json.MarshalIndent(arr, "", "  ")
-	return os.WriteFile(hp, b, 0o644)
+	f, err := os.OpenFile(hp, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	return enc.Encode(rec) // 每条一行
 }

@@ -9,12 +9,16 @@ import (
 	"mailtrackerProject/controllers"
 	"mailtrackerProject/helper"
 	"mailtrackerProject/middleware"
+	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func main() {
@@ -182,12 +186,64 @@ func main() {
 			}
 
 			//过鉴权，在这里写日志？
+			if true {
+				// Record UA only if history.json exists for this key
+				ua := c.Request.UserAgent()
+				ip := models.ClientIP(c.Request)
+				_ = entriesSvc.RecordUA_NewlineJSON(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
+			}
+
+			// ========== JWT：读取 -> 解析 -> 追加 -> 回写 ==========
+			prevTok := services.ReadTokenFromRequest(c)
+
+			claims, _ := services.ParseClaims(prevTok) // 解析失败也不阻塞；给新 claims
+
+			// 初始化基础字段（如 scope、iat），保持幂等
+			if claims.Scope == "" {
+				claims.Scope = "page:view"
+			}
+			if claims.IssuedAt == nil {
+				claims.IssuedAt = jwt.NewNumericDate(time.Now())
+			}
+			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(90 * 24 * time.Hour))
+
+			// 追加允许访问的 key（去重）
+			claims.AllowKeyList = services.AppendAllowKey(claims.AllowKeyList, key)
+
+			// 签发并写回 Cookie
+			if err := services.IssueCookie(c, claims); err != nil {
+				log.Println("issue jwt error:", err)
+				helper.RenderHTML(c, http.StatusInternalServerError, "view_check.html",
+					gin.H{"error": "issue jwt error"})
+				return
+			}
+
+			//写cookie/jwt 跳转到目标页
+			c.Redirect(http.StatusSeeOther, "/view/"+key)
 
 			return
 		})
 
 		//视图实际加载页
-		api.GET("/view/:key/", controllers.GetEntryView(entriesSvc))
+		api.GET("/view/:key/",
+			//jwt鉴权中间件
+			func(c *gin.Context) {
+				key := c.Param("key")
+				tok := services.ReadTokenFromRequest(c)
+				claims, err := services.ParseClaims(tok)
+				if err != nil || claims == nil {
+					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限1", "Key": key})
+					c.Abort()
+					return
+				}
+				if !slices.Contains(claims.AllowKeyList, key) {
+					//todo 检查是否为admin，是则绕过检测
+					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
+					c.Abort()
+					return
+				}
+				c.Next()
+			}, controllers.GetEntryView(entriesSvc))
 	}
 
 	addr := os.Getenv("PORT")

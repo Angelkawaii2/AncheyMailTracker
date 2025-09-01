@@ -9,7 +9,6 @@ import (
 	"mailtrackerProject/services"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -87,47 +86,28 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 	}
 }
 
-// todo 实际的展示页面，用中间件鉴权
+// view 展示数据页，用中间件鉴权
 func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
-		hashedRecipient := c.Param("hashedRecipient")
 		//注入页面用
 
 		data, err := entries.LoadData(key)
 		if err != nil {
 			//key不存在
-			//c.JSON(http.StatusOK, gin.H{"error": err})
 			helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "无效的Key"})
 			return
 		}
 
 		if data != nil {
-
-			hashedName := HashString(*data.Data.RecipientName)
-			//校验失败，重定向回验证页
-			if hashedRecipient != hashedName {
-				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人错误"})
-				return
-			}
-
-			//todo 改为通过session或者cookie传入，当创建后第一次查询或者管理员查询就不记录
-			//doLog := c.Query("log")
-			if true {
-				// Record UA only if history.json exists for this key
-				ua := c.Request.UserAgent()
-				ip := models.ClientIP(c.Request)
-				_ = entries.RecordUAIfHistoryExists(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
-			}
-
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
 				"Key":       key,
 				"CreatedAt": data.CreatedAt.Format("2006-01-02 15:04:05"),
-				"data":      data,
+				"data":      data.Data,
 			})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "no data no error"})
+			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unknown error"})
 	}
 }
 
