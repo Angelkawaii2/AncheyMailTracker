@@ -22,9 +22,8 @@ services:
     ports:
       - "8080:8080"            # 暴露应用端口（与代码监听一致）
       - "2345:2345"            # 预留给 delve 远程调试（可删）
-    # healthcheck 可选：确保容器就绪时才被视为 healthy（按你的健康检查接口调整）
     healthcheck:
-      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT} || exit 1" ]
+      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/healthy || exit 1" ]
       interval: 10s
       timeout: 3s
       retries: 5

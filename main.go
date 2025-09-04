@@ -79,8 +79,12 @@ func main() {
 	defer logger.Sync()
 	// Router
 	r := gin.New()
+	// 不带任何中间件的健康检查
+	r.GET("/healthy", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 	//todo
-	//r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
+	r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
 	r.Use(gin.Recovery(), helper.AccessLogZap(logger))
 	r.Use(middleware.AdminAuthMiddleware())
 
