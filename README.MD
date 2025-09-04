@@ -11,4 +11,7 @@
 3. Cloudflare Turnstile
 
 
+## Todo
+1. i18n 支持
+2. 支持设置查询条件 Before/After 指定日期
 
