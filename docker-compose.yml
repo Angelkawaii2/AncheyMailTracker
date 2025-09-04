@@ -6,6 +6,7 @@ services:
       target: dev              # 使用 Dockerfile 的 dev 阶段
     image: ancheymailtracker:dev         # 本地开发镜像名（可改）
     working_dir: /app
+    command: air -c .air.toml
     volumes:
       - .:/app:cached          # 将当前项目挂载进容器（热重载依赖这个）
       - ./geo_db:/app/geo_db:ro
@@ -23,7 +24,7 @@ services:
       - "2345:2345"            # 预留给 delve 远程调试（可删）
     # healthcheck 可选：确保容器就绪时才被视为 healthy（按你的健康检查接口调整）
     healthcheck:
-      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/health || exit 1" ]
+      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT} || exit 1" ]
       interval: 10s
       timeout: 3s
       retries: 5
