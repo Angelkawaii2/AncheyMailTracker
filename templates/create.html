@@ -54,9 +54,9 @@
                 </div>
                 <div id="passwordBox">
                     <label for="passwordInput">
-                        输入密码：
+                        输入密码 (留空则系统自动生成 4 位随机字符):
                     </label>
-                    <input id="passwordInput" type="password" name="encryptPassword" required>
+                    <input id="passwordInput" type="password" name="encryptPassword">
                 </div>
 
             </fieldset>
@@ -191,10 +191,8 @@
                 if (radio.checked) {
                     if (radio.value === 'password') {
                         passwordBox.style.display = 'block';
-                        passwordInput.required = true
                     } else {
                         passwordBox.style.display = 'none';
-                        passwordInput.required = false
                     }
                     if (radio.value === 'none') {
                         passwdWarnBox.style.display = 'block'

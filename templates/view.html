@@ -7,15 +7,6 @@
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body {
-            margin: 16px;
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        }
-
-        h1 {
-            margin: .2rem 0 1rem;
-        }
-
         .meta {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -137,6 +128,15 @@
                     </div>
                     <div class="meta-value">{{ .data.OriginLocation }}</div>
                 </div>
+                {{ if .data.Encrypt.Password }}
+                <div class="meta-item">
+                    <div class="meta-label">
+                        <i class="fa-solid fa-location-dot"></i> 查询密码
+                    </div>
+                    <input id="lookupPasswordInput" class="input passwdInput" type="text" value="{{ .data.Encrypt.Password }}"/>
+                    <!--                    <div class="meta-value">{{ .data.Encrypt.Password }}</div>-->
+                </div>
+                {{end}}
                 <div class="meta-item" style="grid-column: 1 / -1;">
                     <div class="meta-label">
                         <i class="fa-regular fa-note-sticky"></i> 备注
@@ -184,10 +184,17 @@
 
             <div class="meta-item">
                 <div class="meta-label">
-                    <i class="fa-solid fa-display"></i> 设备
+                    <i class="fa-solid fa-display"></i> 系统
                     <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
                 </div>
-                <div class="meta-value">{{.UA}}</div>
+                <div class="meta-value">{{.UAObj.OS}} {{.UAObj.OSVersion}}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-globe"></i> 浏览器
+                    <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
+                </div>
+                <div class="meta-value"> {{.UAObj.Name}} {{.UAObj.Version}}</div>
             </div>
 
             <div class="meta-item">
@@ -212,6 +219,7 @@
     </div>
 
     <script>
+
         (function () {
             const lb = document.getElementById('lightbox');
             const lbImg = document.getElementById('lbImg');
@@ -246,6 +254,7 @@
                 el.textContent = d.toLocaleString("zh-cn"); // 用户当前时区/地区显示
             });
         })();
+
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>查看表单 {{ .Key }}</title>
+    <title>查询数据 {{ .Key }}</title>
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script
@@ -13,31 +13,31 @@
     ></script>
 </head>
 <body>
-<div class="wrap">
-    <form class="card" method="post" action="/lookup/">
-        <h1 style="text-align: center">查询{{ .Key }}</h1>
-        {{if .error}}
-        <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
-        {{end}}
-        <label for="keyID"> ID: </label>
-        <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
-        <label for="name"> 收件人: </label>
-        <input id="name" name="recipientName" type="text" placeholder="默认为收信人名称">
-        <div class="cf-turnstile" data-sitekey="{{.SiteKey}}"
-             data-callback="onTurnstileSuccess"></div>
-        <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
-    </form>
-</div>
-<script>
+    <div class="wrap">
+        <form class="card" method="post" action="/lookup/">
+            <h1 style="text-align: center">查询{{ .Key }}</h1>
+            {{if .error}}
+            <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
+            {{end}}
+            <label for="keyID"> ID: </label>
+            <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+            <label for="password"> 查询码: </label>
+            <input id="password" name="formPassword" type="text" class="passwdInput" placeholder="查询密码（注意大小写）（无密码则无需填写）">
+            <div class="cf-turnstile" data-sitekey="{{.SiteKey}}"
+                 data-callback="onTurnstileSuccess"></div>
+            <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>
+        </form>
+    </div>
+    <script>
 
-    function onTurnstileSuccess(token) {
-        // Turnstile 验证成功后启用按钮
-        let btn = document.getElementById("submitBtn");
-        btn.disabled = false;
-        btn.textContent = "查询"
-    }
+        function onTurnstileSuccess(token) {
+            // Turnstile 验证成功后启用按钮
+            let btn = document.getElementById("submitBtn");
+            btn.disabled = false;
+            btn.textContent = "查询"
+        }
 
-</script>
+    </script>
 </body>
 </html>
 {{ end }}

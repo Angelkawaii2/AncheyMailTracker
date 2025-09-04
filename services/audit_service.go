@@ -7,12 +7,15 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/mileusna/useragent"
 )
 
 type HistoryRecord struct {
-	Time time.Time `json:"time"`
-	UA   string    `json:"ua"`
-	IP   string    `json:"ip"`
+	Time  time.Time `json:"time"`
+	UA    string    `json:"ua"`
+	IP    string    `json:"ip"`
+	UAObj useragent.UserAgent
 }
 
 func (s *EntriesService) RecorduaNewlinejson(key string, rec HistoryRecord) error {

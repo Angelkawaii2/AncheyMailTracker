@@ -7,6 +7,7 @@ import (
 	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			return
 		}
 
-		recipientName := c.PostForm("recipientName")
+		recipientName := strings.TrimSpace(c.PostForm("recipientName"))
 		remarks := c.PostForm("remarks")
 		originLocation := c.PostForm("originLocation")
 
@@ -34,7 +35,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 		lookupLimitAvailableAfterDate := c.PostForm("lookupLimitAvailableAfterDate")
 		//enableLookupDate := c.PostForm("enableLookupDate")
 		encryptMethod := c.PostForm("encryptMethod")
-		encryptPassword := c.PostForm("encryptPassword")
+		encryptPassword := strings.TrimSpace(c.PostForm("encryptPassword"))
 
 		//处理图片上传
 		// 解析 multipart 表单并拿到所有同名字段 file
@@ -44,10 +45,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			return
 		}
 		filesFH := form.File["files"]
-		/*		if len(filesFH) == 0 {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "missing file"})
-				return
-			}*/
+
 		if len(filesFH) > 9 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "too many images (max 9)"})
 			return
@@ -81,10 +79,17 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			OriginLocation: &originLocation,
 			PostDate:       &postDate,
 		}
+		if encryptMethod == "password" {
+			if encryptPassword == "" {
+				encryptPassword, _ = helper.RandKey(4)
+			}
+		}
+
 		data.Encrypt = &services.Encrypt{
 			Method:   &encryptMethod,
 			Password: &encryptPassword,
 		}
+
 		data.LookupLimit = &services.LookupLimit{
 			Type:           &lookupLimitType,
 			AvailableAfter: &lookupLimitAvailableAfterDate,
@@ -94,7 +99,8 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		//todo 重定向到目标页面
+
+		//重定向到目标页面
 		c.Redirect(http.StatusSeeOther, "/view/"+key)
 	}
 }
@@ -114,6 +120,9 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 
 		//获取访问记录
 		records, _ := entries.ReadUARecords(key)
+		for i := range records {
+			records[i].UAObj = helper.ParseUA(records[i].UA)
+		}
 
 		if data != nil {
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
@@ -139,13 +148,12 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 			c.Redirect(http.StatusSeeOther, "/")
 			return
 		}
-		//todo 根据key的状态决定路由
 		//判断key是否创建
 		if entries.HasData(key) { //创建了跳转到展示页
 			c.Redirect(303, "/lookup/"+key)
 		} else { //没创建跳转到创建页
 			if middleware.IsAdmin(c) {
-				//（可能）是管理员就跳转，鉴权由create的中间件处理
+				//是管理员就跳转，鉴权由create的中间件处理
 				c.Redirect(303, "/create/"+key)
 			} else {
 				//提示该key未启用，是否现在启用

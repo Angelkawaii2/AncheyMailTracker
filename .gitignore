@@ -3,3 +3,4 @@
 data/
 tmp/**
 /.env.dev.local
+geo_db/**

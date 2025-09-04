@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mileusna/useragent"
 )
 
 // 统一渲染：自动把 SiteKey 合并到模板数据里
@@ -37,4 +39,10 @@ func RandKey(length int) (string, error) {
 		out[i] = al[r.Int64()]
 	}
 	return string(out), nil
+}
+
+func ParseUA(userAgent string) useragent.UserAgent {
+	fmt.Println(userAgent)
+	fmt.Println(useragent.Parse(userAgent))
+	return useragent.Parse(userAgent)
 }

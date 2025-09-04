@@ -67,6 +67,10 @@ pre {
     box-sizing: border-box;
 }
 
+h1 {
+    margin: .2rem 0 1rem;
+}
+
 body {
     margin: 24px;
     font-family: var(--font-family);
@@ -108,6 +112,18 @@ label {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
 }
+
+/*.passwdInput {
+    color: transparent !important; !* 隐藏文字本身 *!
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.75); !* 用阴影当成模糊文字 *!
+    transition: color 0.2s ease, text-shadow 0.2s ease; !* 加过渡 *!
+}
+
+.passwdInput:hover, .passwdInput:focus {
+    color: var(--text) !important;
+    text-shadow: none; !* 取消模糊 *!
+    filter: blur(0);
+}*/
 
 input[type="file"] {
     width: 100%;

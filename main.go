@@ -64,6 +64,7 @@ func main() {
 	// Router
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
+	r.Use(middleware.AdminAuthMiddleware())
 
 	// Load HTML templates (SSR view kept minimal; APIs return JSON)
 	r.LoadHTMLGlob("templates/*.html")
@@ -114,7 +115,6 @@ func main() {
 	r.GET("/create", middleware.RequireLogin(), createHandler)
 	r.GET("/create/:key", middleware.RequireLogin(), createHandler)
 
-	r.Use(middleware.AdminAuthMiddleware())
 	// 首页
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{"Authenticated": middleware.IsAdmin(c)})
@@ -144,16 +144,15 @@ func main() {
 
 	api := r.Group("")
 	{
+		//二维码落地页
 		api.GET("/s/:key", controllers.GetEntryRouteView(entriesSvc, keysSvc))
-		// Fetch entry data by key (and record UA to history.json if it exists)
+		//创建表单提交
 		api.POST("/entry", controllers.PostEntry(entriesSvc, fileSrvc, keysSvc))
 
-		siteKey := os.Getenv("CF_TURNSTILE_SITEKEY")
-
-		//视图落地页，没有密码时要求用户输入
+		//查询页，没有密码时要求用户输入
 		viewCheckHandler := func(c *gin.Context) {
 			key := c.Param("key")
-			c.HTML(http.StatusOK, "view_check.html", gin.H{"Key": key, "SiteKey": siteKey})
+			helper.RenderHTML(c, http.StatusOK, "view_check.html", gin.H{"Key": key})
 		}
 		api.GET("/lookup/", viewCheckHandler)
 		api.GET("/lookup/:key", viewCheckHandler)
@@ -172,26 +171,53 @@ func main() {
 			},
 		}), func(c *gin.Context) {
 			key := c.PostForm("keyID")
-			recipientName := c.PostForm("recipientName")
+			formPassword := c.PostForm("formPassword")
 
-			//业务鉴权，读取表单的收件人并做对比
-			//访问目标key
+			//读取目标key的数据
 			entry, err := entriesSvc.LoadData(key)
 			if err != nil {
 				log.Println(err)
-				//
-			}
-			fmt.Println(entry)
-
-			name := entry.Data.RecipientName
-			if name == nil || *name == "" || subtle.ConstantTimeCompare([]byte(recipientName), []byte(*name)) != 1 {
-				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "收件人核验失败，请检查输入是否正确（大小写、空格？）"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "load data failed"})
+				c.Abort()
 				return
 			}
 
+			//鉴权
+			encrypt := entry.Data.Encrypt
+			if encrypt != nil {
+				method := encrypt.Method
+				if method != nil {
+					//验证收件人
+					if *method == "recipient" {
+						name := entry.Data.RecipientName
+						if name == nil || subtle.ConstantTimeCompare([]byte(formPassword), []byte(*name)) != 1 {
+							helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
+								gin.H{"Key": key, "error": "收件人核验失败，请检查输入是否正确（大小写、空格？）"})
+							return
+						}
+					}
+					if *method == "password" {
+						passwd := encrypt.Password
+						if passwd != nil {
+							if subtle.ConstantTimeCompare([]byte(*passwd), []byte(formPassword)) != 1 {
+								helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
+									gin.H{"Key": key, "error": "密码核验失败，请检查输入是否正确（大小写、空格？）"})
+
+								return
+							}
+						}
+					}
+				}
+			}
+
+			//todo 检查当前请求时间是否在范围内
+
 			//过鉴权，在这里写日志？
+			//todo 不记录管理员查询？（虽然管理员落地也不走这个路由
+			//if !middleware.IsAdmin(c) {
 			if true {
 				// Record UA only if history.json exists for this key
+				//todo 记录用户浏览器语言
 				ua := c.Request.UserAgent()
 				ip := models.ClientIP(c.Request)
 				_ = entriesSvc.RecorduaNewlinejson(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
@@ -224,7 +250,6 @@ func main() {
 
 			//写cookie/jwt 跳转到目标页
 			c.Redirect(http.StatusSeeOther, "/view/"+key)
-
 			return
 		})
 
@@ -233,18 +258,20 @@ func main() {
 			//jwt鉴权中间件
 			func(c *gin.Context) {
 				key := c.Param("key")
-				tok := services.ReadTokenFromRequest(c)
-				claims, err := services.ParseClaims(tok)
-				if err != nil || claims == nil {
-					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限1", "Key": key})
-					c.Abort()
-					return
-				}
-				//admin不检测访问权限，允许直接进入
-				if !middleware.IsAdmin(c) && !slices.Contains(claims.AllowKeyList, key) {
-					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
-					c.Abort()
-					return
+				//非管理才鉴权有无jwt
+				if !middleware.IsAdmin(c) {
+					tok := services.ReadTokenFromRequest(c)
+					claims, err := services.ParseClaims(tok)
+					if err != nil || claims == nil {
+						helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限1", "Key": key})
+						c.Abort()
+						return
+					}
+					if !slices.Contains(claims.AllowKeyList, key) {
+						helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
+						c.Abort()
+						return
+					}
 				}
 				c.Next()
 			}, controllers.GetEntryView(entriesSvc))
