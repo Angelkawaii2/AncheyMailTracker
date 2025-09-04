@@ -53,6 +53,20 @@ func main() {
 	}
 
 	// Services
+
+	//加载ip库
+
+	cityPath := os.Getenv("CITY_MMDB")
+	asnPath := os.Getenv("ASN_MMDB")
+
+	// 2) 初始化单例（geoip2.Reader 是 goroutine-safe，可全局复用）
+	geoService, err := services.NewGeoSerice(cityPath, asnPath)
+	if err != nil {
+		log.Fatalf("init geo service: %v", err)
+	}
+	defer geoService.Close()
+
+	//加载key service
 	keysSvc := services.NewKeysService(filepath.Join(dataDir, "keys.json"))
 	if err := keysSvc.Load(); err != nil {
 		log.Fatalf("load keys: %v", err)
@@ -72,6 +86,20 @@ func main() {
 
 	r.GET("/login", func(c *gin.Context) {
 		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
+	})
+
+	r.GET("/ip", func(c *gin.Context) {
+		ip := c.Query("addr")
+		if ip == "" {
+			ip = c.ClientIP()
+		}
+		info, err := geoService.Lookup(ip)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "ip": ip})
+			return
+		}
+		fmt.Println(info)
+		c.JSON(http.StatusOK, info)
 	})
 
 	r.POST("/login", middleware.TurnstileGuard(middleware.TurnstileConfig{

@@ -8,12 +8,16 @@ services:
     working_dir: /app
     volumes:
       - .:/app:cached          # 将当前项目挂载进容器（热重载依赖这个）
+      - ./geo_db:/app/geo_db:ro
       - gocache:/go/pkg/mod    # Go module 缓存
       - gobuild:/root/.cache/go-build  # Go build 缓存
     env_file:
       - .env
       - .env.development
       - .env.dev.local
+    environment:
+      CITY_MMDB: "/app/geo_db/GeoLite2-City.mmdb"
+      ASN_MMDB: "/app/geo_db/GeoLite2-ASN.mmdb"
     ports:
       - "8080:8080"            # 暴露应用端口（与代码监听一致）
       - "2345:2345"            # 预留给 delve 远程调试（可删）
