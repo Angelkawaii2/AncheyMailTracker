@@ -77,6 +77,7 @@ func main() {
 
 	// Router
 	r := gin.New()
+	r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
 	r.Use(gin.Logger(), gin.Recovery())
 	r.Use(middleware.AdminAuthMiddleware())
 
