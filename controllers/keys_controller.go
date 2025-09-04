@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"mailtrackerProject/services"
 	"net/http"
 	"strconv"
@@ -88,7 +87,6 @@ func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.
 				"used":       entries.HasData(ki.Key),
 			})
 		}
-		log.Print(out)
 		c.HTML(http.StatusOK, "key_view.html", out)
 	}
 }

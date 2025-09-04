@@ -75,10 +75,12 @@ func main() {
 	entriesSvc := services.NewEntriesService(dataDir, keysSvc)
 	fileSrvc := services.NewFilesService(dataDir)
 
+	logger := helper.NewZap()
+	defer logger.Sync()
 	// Router
 	r := gin.New()
 	r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
-	r.Use(gin.Logger(), gin.Recovery())
+	r.Use(gin.Recovery(), helper.AccessLogZap(logger))
 	r.Use(middleware.AdminAuthMiddleware())
 
 	// Load HTML templates (SSR view kept minimal; APIs return JSON)
@@ -156,7 +158,6 @@ func main() {
 
 		base := filepath.Join(".", "data", "entries") // . 表示当前工作目录
 		abs := filepath.Join(base, key, "images", img)
-		log.Printf(abs)
 		c.File(abs)
 	})
 
