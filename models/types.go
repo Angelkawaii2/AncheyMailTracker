@@ -1,7 +1,6 @@
 package models
 
 import (
-	"net/http"
 	"unicode/utf8"
 )
 
@@ -16,21 +15,4 @@ func ValidKey(k string) bool {
 		return false
 	}
 	return true
-}
-
-// ClientIP extracts best-effort ip
-func ClientIP(r *http.Request) string {
-	if x := r.Header.Get("X-Real-IP"); x != "" {
-		return x
-	}
-	if x := r.Header.Get("X-Forwarded-For"); x != "" {
-		return x
-	}
-	host := r.RemoteAddr
-	for i := len(host) - 1; i >= 0; i-- {
-		if host[i] == ':' {
-			return host[:i]
-		}
-	}
-	return host
 }

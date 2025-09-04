@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"os"
 
@@ -42,7 +41,5 @@ func RandKey(length int) (string, error) {
 }
 
 func ParseUA(userAgent string) useragent.UserAgent {
-	fmt.Println(userAgent)
-	fmt.Println(useragent.Parse(userAgent))
 	return useragent.Parse(userAgent)
 }
