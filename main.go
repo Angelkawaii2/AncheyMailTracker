@@ -4,12 +4,12 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"mailtrackerProject/controllers"
 	"mailtrackerProject/helper"
 	"mailtrackerProject/middleware"
-	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
 	"os"
@@ -79,7 +79,8 @@ func main() {
 	defer logger.Sync()
 	// Router
 	r := gin.New()
-	r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
+	//todo
+	//r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
 	r.Use(gin.Recovery(), helper.AccessLogZap(logger))
 	r.Use(middleware.AdminAuthMiddleware())
 
@@ -91,17 +92,24 @@ func main() {
 		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
 	})
 
+	fmt.Println("================")
+	lookup, err := geoService.Lookup("233.5.5.5") //todo测试
+	fmt.Println(json.Marshal(*lookup))
+	fmt.Println(err)
+	fmt.Println("================")
+
 	r.GET("/ip", func(c *gin.Context) {
-		ip := c.Query("addr")
+		ip := c.Query("port")
 		if ip == "" {
 			ip = c.ClientIP()
 		}
+		fmt.Println("---------------------------")
+		fmt.Println(ip)
 		info, err := geoService.Lookup(ip)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "ip": ip})
 			return
 		}
-		fmt.Println(info)
 		c.JSON(http.StatusOK, info)
 	})
 
@@ -112,7 +120,6 @@ func main() {
 		},
 		OnFail: func(c *gin.Context, err error) {
 			// 失败统一回到验证页（带上 SiteKey）
-			fmt.Println(err)
 			helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
 			return
 		},
@@ -195,7 +202,6 @@ func main() {
 			},
 			OnFail: func(c *gin.Context, err error) {
 				// 失败统一回到验证页（带上 SiteKey）
-				fmt.Println(err)
 				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
 				return
 			},
@@ -241,7 +247,6 @@ func main() {
 			}
 
 			//todo 检查当前请求时间是否在范围内
-
 			//过鉴权，在这里写日志？
 			//todo 不记录管理员查询？（虽然管理员落地也不走这个路由
 			//if !middleware.IsAdmin(c) {
@@ -249,7 +254,7 @@ func main() {
 				// Record UA only if history.json exists for this key
 				//todo 记录用户浏览器语言
 				ua := c.Request.UserAgent()
-				ip := models.ClientIP(c.Request)
+				ip := c.ClientIP()
 				_ = entriesSvc.RecorduaNewlinejson(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
 			}
 
@@ -304,12 +309,12 @@ func main() {
 					}
 				}
 				c.Next()
-			}, controllers.GetEntryView(entriesSvc))
+			}, controllers.GetEntryView(entriesSvc, geoService))
 	}
 
-	addr := os.Getenv("PORT")
-	log.Printf("listening on %s (DATA_DIR=%s)", addr, dataDir)
-	if err := r.Run(addr); err != nil {
+	port := os.Getenv("PORT")
+	log.Printf("listening on %s (DATA_DIR=%s)", port, dataDir)
+	if err := r.Run("0.0.0.0:" + port); err != nil {
 		log.Fatal(err)
 	}
 }
