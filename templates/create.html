@@ -6,13 +6,17 @@
     <title>创建条目</title>
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+    <style>
+        #passwordBox {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="wrap">
         <form class="card" action="/entry" method="post" enctype="multipart/form-data">
             <h2>创建条目</h2>
-            <p class="muted">为该二维码添加数据，添加后不可更改。</p>
+            <p class="muted">为该二维码添加数据</p>
 
             {{if .Key}}
             <label for="entryId">
@@ -23,13 +27,58 @@
             <label for="entryId">
                 <i class="fa-solid fa-fingerprint"></i> ID
             </label>
-            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}" required/>
+            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}"
+                   required/>
             {{end}}
 
             <label for="postDate">
                 <i class="fa-solid fa-calendar-day"></i> 寄送日期:
             </label>
-            <input type="date" id="postDate" name="postDate" required />
+            <input type="date" id="postDate" name="postDate" required/>
+
+
+            <label>
+                <i class="fa-solid fa-magnifying-glass"></i> 查询设置:
+            </label>
+            <fieldset>
+                <legend>加密方式</legend>
+                <input type="radio" id="encryptMethod1" name="encryptMethod" value="none"/>
+                <label for="encryptMethod1">无加密</label>
+                <input type="radio" id="encryptMethod2" name="encryptMethod" value="recipient" checked/>
+                <label for="encryptMethod2">使用收件人名称</label>
+                <input type="radio" id="encryptMethod3" name="encryptMethod" value="password"/>
+                <label for="encryptMethod3">使用自定义密码</label>
+
+                <div id="warnBox" style="display: none">
+                    <p>该模式下扫码即可直接查询结果，请注意数据安全！</p>
+                </div>
+                <div id="passwordBox">
+                    <label for="passwordInput">
+                        输入密码：
+                    </label>
+                    <input id="passwordInput" type="password" name="lookupPassword" required>
+                </div>
+
+            </fieldset>
+
+            <fieldset>
+                <legend>在此日期后允许查询:</legend>
+                <input type="radio" id="lookupLimitNone" name="lookupLimit" value="none"/>
+                <label for="lookupLimitNone">不限制</label>
+                <input type="radio" id="lookupLimitAfter" name="lookupLimit" value="limitAfter" checked/>
+                <label for="lookupLimitAfter">限制为...</label>
+
+                <div id="lookupDateInputBox">
+                    <input type="date" id="enableLookupDateInput" name="enableLookupDate"/>
+                    <div style="display: flex;gap: 0.5rem;margin-top: 0.5rem">
+                        <button class="btn" type="button" onclick="setLookupDay(1)"> 1 天后</button>
+                        <button class="btn" type="button" onclick="setLookupDay(3)"> 3 天后</button>
+                        <button class="btn" type="button" onclick="setLookupDay(7)"> 7 天后</button>
+                    </div>
+                </div>
+
+            </fieldset>
+
 
             <label for="recipientName">
                 <i class="fa-solid fa-user"></i> 收件人
@@ -39,7 +88,8 @@
             <label for="originLocation">
                 <i class="fa-solid fa-location-dot"></i> 发件地点
             </label>
-            <input id="originLocation" name="originLocation" type="text" placeholder="发件地址/邮局名称，通常位于邮戳下方" required/>
+            <input id="originLocation" name="originLocation" type="text"
+                   placeholder="发件地址/邮局名称，通常位于邮戳下方" required/>
 
             <label for="remarks">
                 <i class="fa-regular fa-note-sticky"></i> 备注
@@ -49,7 +99,7 @@
             <label for="files">
                 <i class="fa-regular fa-image"></i> 照片（可多选）
             </label>
-            <input id="files" name="files" type="file" accept="image/*" multiple required/>
+            <input id="files" name="files" type="file" accept="image/*" multiple/>
 
             <!-- 可选附加项示例 -->
             <!--
@@ -65,11 +115,10 @@
             </div>
 
             <div style="margin-top:10px">
-                <button type="submit">提交并跳转</button>
+                <button class="btn" type="submit">提交并跳转</button>
             </div>
         </form>
     </div>
-
 
 
     <script>
@@ -77,13 +126,23 @@
         const previewBox = document.getElementById('previewBox');
         const previewGrid = document.getElementById('previewGrid');
         const fileCount = document.getElementById('fileCount');
+        const lookupDateInput = document.getElementById("enableLookupDateInput");
 
+        function getDayOffset(dayAfter) {
+            const day = new Date(); // 当前日期
+            day.setDate(day.getDate() + dayAfter); // 加上偏移天数
+            return day;
+        }
 
         document.addEventListener("DOMContentLoaded", function () {
-            const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+            const today = getDayOffset(0).toISOString().split("T")[0]; // YYYY-MM-DD
             document.getElementById("postDate").value = today;
+            lookupDateInput.value = today;
         });
 
+        function setLookupDay(dayAfter) {
+            lookupDateInput.value = getDayOffset(dayAfter).toISOString().split("T")[0]
+        }
 
         // 记录已创建的 ObjectURL，便于释放
         let urls = [];
@@ -120,6 +179,39 @@
 
         // 页面卸载时清理
         window.addEventListener('beforeunload', clearPreviews);
+
+        // 处理加密模式表单
+        const radios = document.querySelectorAll('input[name="encryptMethod"]');
+        const passwordBox = document.getElementById('passwordBox');
+        const passwdWarnBox = document.getElementById('warnBox');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    if (radio.value === 'password') {
+                        passwordBox.style.display = 'block';
+                    } else {
+                        passwordBox.style.display = 'none';
+                    }
+                    if (radio.value === 'none') {
+                        passwdWarnBox.style.display = 'block'
+                    } else {
+                        passwdWarnBox.style.display = 'none';
+                    }
+                }
+            })
+        });
+
+
+        const lookupLimit = document.querySelectorAll('input[name="lookupLimit"]');
+        const dateBox = document.getElementById('lookupDateInputBox');
+
+        lookupLimit.forEach(radio => {
+            radio.addEventListener('change', () => {
+                dateBox.hidden = (radio.value !== 'limitAfter');
+            });
+        });
+
     </script>
 </body>
 </html>

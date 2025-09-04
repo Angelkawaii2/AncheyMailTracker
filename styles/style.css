@@ -100,7 +100,7 @@ label {
 }
 
 /* Inputs */
-:is(input[type="text"], input[type="date"], textarea,.input) {
+:is(input[type="text"], input[type="date"], input[type="password"], textarea,.input) {
     width: 100%;
     padding: var(--pad-md);
     background: var(--bg-light);
