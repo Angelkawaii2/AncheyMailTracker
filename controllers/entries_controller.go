@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"log"
 	"mailtrackerProject/helper"
+	"mailtrackerProject/middleware"
 	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// create 路由
 func PostEntry(entries *services.EntriesService, files *services.FilesService, keys *services.KeysService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.PostForm("entryId")
@@ -28,8 +28,15 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 		recipientName := c.PostForm("recipientName")
 		remarks := c.PostForm("remarks")
 		originLocation := c.PostForm("originLocation")
-		postDate := c.PostForm("postDate")
 
+		postDate := c.PostForm("postDate")
+		lookupLimitType := c.PostForm("lookupLimitType")
+		lookupLimitAvailableAfterDate := c.PostForm("lookupLimitAvailableAfterDate")
+		//enableLookupDate := c.PostForm("enableLookupDate")
+		encryptMethod := c.PostForm("encryptMethod")
+		encryptPassword := c.PostForm("encryptPassword")
+
+		//处理图片上传
 		// 解析 multipart 表单并拿到所有同名字段 file
 		form, err := c.MultipartForm()
 		if err != nil {
@@ -37,10 +44,10 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			return
 		}
 		filesFH := form.File["files"]
-		if len(filesFH) == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing file"})
-			return
-		}
+		/*		if len(filesFH) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "missing file"})
+				return
+			}*/
 		if len(filesFH) > 9 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "too many images (max 9)"})
 			return
@@ -73,6 +80,14 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			Images:         &imageIDs,
 			OriginLocation: &originLocation,
 			PostDate:       &postDate,
+		}
+		data.Encrypt = &services.Encrypt{
+			Method:   &encryptMethod,
+			Password: &encryptPassword,
+		}
+		data.LookupLimit = &services.LookupLimit{
+			Type:           &lookupLimitType,
+			AvailableAfter: &lookupLimitAvailableAfterDate,
 		}
 
 		if err := entries.SaveData(key, data); err != nil {
@@ -124,25 +139,18 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 			c.Redirect(http.StatusSeeOther, "/")
 			return
 		}
+		//todo 根据key的状态决定路由
 		//判断key是否创建
 		if entries.HasData(key) { //创建了跳转到展示页
 			c.Redirect(303, "/lookup/"+key)
 		} else { //没创建跳转到创建页
-			//如果不是管理员
-			token, err := c.Cookie("X-Admin-Token")
-			if err != nil || token == "" {
-				//提示该key未启用，是否现在启用
-				//如果要启用才让用户登录
-				c.HTML(http.StatusOK, "key_not_enable.html", gin.H{"Key": key})
-			} else {
+			if middleware.IsAdmin(c) {
 				//（可能）是管理员就跳转，鉴权由create的中间件处理
 				c.Redirect(303, "/create/"+key)
+			} else {
+				//提示该key未启用，是否现在启用
+				c.HTML(http.StatusOK, "key_not_enable.html", gin.H{"Key": key})
 			}
 		}
 	}
-}
-func HashString(s string) string {
-	h := sha256.New()
-	h.Write([]byte(s))
-	return hex.EncodeToString(h.Sum(nil))
 }

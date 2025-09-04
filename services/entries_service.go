@@ -16,12 +16,24 @@ type EntryEnvelope struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Encrypt struct {
+	Method   *string `json:"method"`
+	Password *string `json:"password"`
+}
+type LookupLimit struct {
+	Type            *string `json:"type"`
+	AvailableAfter  *string `json:"availableAfter"`
+	AvailableBefore *string `json:"availableBefore"`
+}
+
 type EntryData struct {
-	Images         *[]string `json:"images,omitempty"`         // 可选数组
-	OriginLocation *string   `json:"originLocation,omitempty"` // 可选字符串
-	PostDate       *string   `json:"postDate,omitempty"`       // 用 *string 保存原始日期，再转 time.Time
-	RecipientName  *string   `json:"recipientName,omitempty"`
-	Remarks        *string   `json:"remarks,omitempty"`
+	Images         *[]string    `json:"images,omitempty"`         // 可选数组
+	OriginLocation *string      `json:"originLocation,omitempty"` // 可选字符串
+	PostDate       *string      `json:"postDate,omitempty"`       // 用 *string 保存原始日期，再转 time.Time
+	LookupLimit    *LookupLimit `json:"lookupLimit,omitempty"`
+	Encrypt        *Encrypt     `json:"encrypt,omitempty"`
+	RecipientName  *string      `json:"recipientName,omitempty"`
+	Remarks        *string      `json:"remarks,omitempty"`
 }
 
 type EntriesService struct {
