@@ -1,8 +1,10 @@
 package helper
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"math/big"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -20,4 +22,19 @@ func HashString(s string) string {
 	h := sha256.New()
 	h.Write([]byte(s))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// 使用 crypto/rand 生成不可预测 key；字符集避免易混淆字符
+func RandKey(length int) (string, error) {
+	const al = "ABCDEFHJKLMNPQRSTWXY123456789" // 31 chars
+	var out = make([]byte, length)
+	max := big.NewInt(int64(len(al)))
+	for i := 0; i < length; i++ {
+		r, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		out[i] = al[r.Int64()]
+	}
+	return string(out), nil
 }

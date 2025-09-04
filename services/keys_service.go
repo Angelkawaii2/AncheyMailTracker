@@ -1,10 +1,9 @@
 package services
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"math/big"
+	"mailtrackerProject/helper"
 	"os"
 	"path/filepath"
 	"sort"
@@ -86,7 +85,7 @@ func (s *KeysService) Generate(n int, length int, comment string) ([]KeyInfo, er
 		var err error
 		ok := false
 		for attempt := 0; attempt < maxAttemptsPerKey; attempt++ {
-			k, err = randKey(length)
+			k, err = helper.RandKey(length)
 			if err != nil {
 				return nil, err
 			}
@@ -143,19 +142,4 @@ func (s *KeysService) List() []KeyInfo {
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.After(list[j].CreatedAt) })
 	return list
-}
-
-// 使用 crypto/rand 生成不可预测 key；字符集避免易混淆字符
-func randKey(n int) (string, error) {
-	const al = "ABCDEFHJKLMNPQRSTWXY123456789" // 31 chars
-	var out = make([]byte, n)
-	max := big.NewInt(int64(len(al)))
-	for i := 0; i < n; i++ {
-		r, err := rand.Int(rand.Reader, max)
-		if err != nil {
-			return "", err
-		}
-		out[i] = al[r.Int64()]
-	}
-	return string(out), nil
 }
