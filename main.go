@@ -111,14 +111,13 @@ func main() {
 			"Key": key,
 		})
 	}
-	r.GET("/create", middleware.AdminAuthMiddleware(), createHandler)
-	r.GET("/create/:key", middleware.AdminAuthMiddleware(), createHandler)
+	r.GET("/create", middleware.RequireLogin(), createHandler)
+	r.GET("/create/:key", middleware.RequireLogin(), createHandler)
 
+	r.Use(middleware.AdminAuthMiddleware())
 	// 首页
 	r.GET("/", func(c *gin.Context) {
-		tk, _ := c.Cookie("X-Admin-Token")
-		auth := tk == adminToken
-		c.HTML(http.StatusOK, "index.html", gin.H{"Authenticated": auth})
+		c.HTML(http.StatusOK, "index.html", gin.H{"Authenticated": middleware.IsAdmin(c)})
 	})
 
 	r.GET("/img/:key/:imgName", func(c *gin.Context) {
@@ -132,7 +131,7 @@ func main() {
 		c.File(abs)
 	})
 
-	admin := r.Group("/admin", middleware.AdminAuthMiddleware())
+	admin := r.Group("/admin", middleware.RequireLogin())
 	{
 		//admin.GET('/')
 		admin.GET("/keys/generate", func(c *gin.Context) {
@@ -241,8 +240,8 @@ func main() {
 					c.Abort()
 					return
 				}
-				if !slices.Contains(claims.AllowKeyList, key) {
-					//todo 检查是否为admin，是则绕过检测
+				//admin不检测访问权限，允许直接进入
+				if !middleware.IsAdmin(c) && !slices.Contains(claims.AllowKeyList, key) {
 					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
 					c.Abort()
 					return

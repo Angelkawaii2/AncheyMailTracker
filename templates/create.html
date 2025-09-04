@@ -56,20 +56,20 @@
                     <label for="passwordInput">
                         输入密码：
                     </label>
-                    <input id="passwordInput" type="password" name="lookupPassword" required>
+                    <input id="passwordInput" type="password" name="encryptPassword" required>
                 </div>
 
             </fieldset>
 
             <fieldset>
                 <legend>在此日期后允许查询:</legend>
-                <input type="radio" id="lookupLimitNone" name="lookupLimit" value="none"/>
+                <input type="radio" id="lookupLimitNone" name="lookupLimitType" value="none"/>
                 <label for="lookupLimitNone">不限制</label>
-                <input type="radio" id="lookupLimitAfter" name="lookupLimit" value="limitAfter" checked/>
+                <input type="radio" id="lookupLimitAfter" name="lookupLimitType" value="limitAfter" checked/>
                 <label for="lookupLimitAfter">限制为...</label>
 
                 <div id="lookupDateInputBox">
-                    <input type="date" id="enableLookupDateInput" name="enableLookupDate"/>
+                    <input type="date" id="enableLookupDateInput" name="lookupLimitAvailableAfterDate"/>
                     <div style="display: flex;gap: 0.5rem;margin-top: 0.5rem">
                         <button class="btn" type="button" onclick="setLookupDay(1)"> 1 天后</button>
                         <button class="btn" type="button" onclick="setLookupDay(3)"> 3 天后</button>
@@ -183,6 +183,7 @@
         // 处理加密模式表单
         const radios = document.querySelectorAll('input[name="encryptMethod"]');
         const passwordBox = document.getElementById('passwordBox');
+        const passwordInput = document.getElementById('passwordInput');
         const passwdWarnBox = document.getElementById('warnBox');
 
         radios.forEach(radio => {
@@ -190,8 +191,10 @@
                 if (radio.checked) {
                     if (radio.value === 'password') {
                         passwordBox.style.display = 'block';
+                        passwordInput.required = true
                     } else {
                         passwordBox.style.display = 'none';
+                        passwordInput.required = false
                     }
                     if (radio.value === 'none') {
                         passwdWarnBox.style.display = 'block'
