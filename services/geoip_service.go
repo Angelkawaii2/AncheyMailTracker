@@ -13,7 +13,7 @@ type Service struct {
 	asn  *geoip2.Reader
 }
 
-type Info struct {
+type IPInfo struct {
 	CountryISO string  `json:"country_iso"`
 	Country    string  `json:"country"`
 	Region     string  `json:"region"`
@@ -53,15 +53,12 @@ func (s *Service) Close() error {
 }
 
 // 传入字符串 IP；内部同时兼容 IPv4/IPv6；私网/无效地址直接报错
-func (s *Service) Lookup(ipStr string) (*Info, error) {
+func (s *Service) Lookup(ipStr string) (*IPInfo, error) {
 	ipStr = strings.TrimSpace(ipStr)
 	addr, err := netip.ParseAddr(ipStr)
 	if err != nil {
 		return nil, err
 	}
-	/*if addr.IsPrivate() || addr.IsLoopback() || addr.IsUnspecified() {
-		return nil, errors.New("non-public ip")
-	}*/
 
 	// geoip2 接口仍用 net.IP
 	ip := net.ParseIP(addr.String())
@@ -75,7 +72,7 @@ func (s *Service) Lookup(ipStr string) (*Info, error) {
 		return nil, err
 	}
 
-	info := &Info{
+	info := &IPInfo{
 		CountryISO: cityRec.Country.IsoCode,
 		Country:    cityRec.Country.Names["en"],
 		City:       cityRec.City.Names["en"],

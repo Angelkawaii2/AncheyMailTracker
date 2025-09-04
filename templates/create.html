@@ -176,10 +176,8 @@
             fileCount.textContent = `已选择 ${files.length} 张图片`;
             previewBox.style.display = 'block';
         });
-
         // 页面卸载时清理
         window.addEventListener('beforeunload', clearPreviews);
-
         // 处理加密模式表单
         const radios = document.querySelectorAll('input[name="encryptMethod"]');
         const passwordBox = document.getElementById('passwordBox');

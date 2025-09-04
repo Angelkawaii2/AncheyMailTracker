@@ -106,7 +106,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 }
 
 // view 展示数据页，用中间件鉴权
-func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
+func GetEntryView(entries *services.EntriesService, service *services.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
 		//注入页面用
@@ -122,6 +122,7 @@ func GetEntryView(entries *services.EntriesService) gin.HandlerFunc {
 		records, _ := entries.ReadUARecords(key)
 		for i := range records {
 			records[i].UAObj = helper.ParseUA(records[i].UA)
+			records[i].IPObj, _ = service.Lookup(records[i].IP)
 		}
 
 		if data != nil {
