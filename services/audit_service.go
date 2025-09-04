@@ -12,10 +12,11 @@ import (
 )
 
 type HistoryRecord struct {
-	Time  time.Time `json:"time"`
-	UA    string    `json:"ua"`
-	IP    string    `json:"ip"`
-	UAObj useragent.UserAgent
+	Time  time.Time           `json:"time"`
+	UA    string              `json:"ua"`
+	IP    string              `json:"ip"`
+	UAObj useragent.UserAgent `json:"-"`
+	IPObj *IPInfo             `json:"-"`
 }
 
 func (s *EntriesService) RecorduaNewlinejson(key string, rec HistoryRecord) error {
