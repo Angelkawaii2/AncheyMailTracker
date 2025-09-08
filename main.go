@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"log"
 	"mailtrackerProject/controllers"
@@ -95,12 +94,6 @@ func main() {
 	r.GET("/login", func(c *gin.Context) {
 		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
 	})
-
-	fmt.Println("================")
-	lookup, err := geoService.Lookup("233.5.5.5") //todo测试
-	fmt.Println(json.Marshal(*lookup))
-	fmt.Println(err)
-	fmt.Println("================")
 
 	r.GET("/ip", func(c *gin.Context) {
 		ip := c.Query("port")
