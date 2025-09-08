@@ -15,7 +15,7 @@ services:
     env_file:
       - .env
       - .env.development
-      - .env.dev.local
+      - .env.settings.local
     environment:
       CITY_MMDB: "/app/geo_db/GeoLite2-City.mmdb"
       ASN_MMDB: "/app/geo_db/GeoLite2-ASN.mmdb"
@@ -34,14 +34,11 @@ services:
     build:
       context: .
       target: runtime          # 使用 Dockerfile 的 runtime 阶段
-      # <<: *defaults
     image: ancheymailtracker:prod         # 生产镜像名（用于本机验证或推仓库）
     env_file:
       - .env
-      - .env.dev.local
     ports:
       - "8080:8080"
-    # 生产容器通常不需要挂源码卷
     restart: unless-stopped
     volumes:
       - ./data:/app/data:rw
