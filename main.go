@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -209,9 +210,15 @@ func main() {
 			//读取目标key的数据
 			entry, err := entriesSvc.LoadData(key)
 			if err != nil {
+				//转全大写再查一次
+				entry, err = entriesSvc.LoadData(strings.ToUpper(key))
+			}
+			if err != nil {
 				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "load data failed"})
-				c.Abort()
+				//无数据跳转回首页
+				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
+					gin.H{"Key": key, "error": "ID不存在，请检查输入是否有误"},
+				)
 				return
 			}
 
