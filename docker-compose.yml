@@ -41,7 +41,7 @@ services:
       CITY_MMDB: "/app/geo_db/GeoLite2-City.mmdb"
       ASN_MMDB: "/app/geo_db/GeoLite2-ASN.mmdb"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     restart: unless-stopped
     volumes:
       - ./data:/app/data:rw
