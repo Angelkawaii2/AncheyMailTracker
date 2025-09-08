@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
+	"html/template"
 	"log"
 	"mailtrackerProject/controllers"
 	"mailtrackerProject/helper"
@@ -78,7 +79,7 @@ func main() {
 	logger := helper.NewZap()
 	defer logger.Sync()
 	// Router
-	r := gin.New()
+	r := gin.Default()
 	// 不带任何中间件的健康检查
 	r.GET("/healthy", func(c *gin.Context) {
 		c.Status(http.StatusOK)
@@ -88,6 +89,14 @@ func main() {
 	r.Use(gin.Recovery(), helper.AccessLogZap(logger))
 	r.Use(middleware.AdminAuthMiddleware())
 
+	r.SetFuncMap(template.FuncMap{
+		"deref": func(s *string) string {
+			if s == nil {
+				return ""
+			}
+			return *s
+		},
+	})
 	// Load HTML templates (SSR view kept minimal; APIs return JSON)
 	r.LoadHTMLGlob("templates/*.html")
 	r.Static("/styles", "./styles")

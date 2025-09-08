@@ -112,7 +112,7 @@
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">
-                        <i class="fa-solid fa-calendar-day"></i> 邮戳时间
+                        <i class="fa-solid fa-calendar-day"></i> 发件时间
                     </div>
                     <div class="meta-value">{{ .data.PostDate }}</div>
                 </div>
@@ -131,10 +131,18 @@
                 {{ if .data.Encrypt.Password }}
                 <div class="meta-item">
                     <div class="meta-label">
-                        <i class="fa-solid fa-location-dot"></i> 查询密码
+                        <i class="fa-solid fa-eye"></i> 查询密码
                     </div>
-                    <input id="lookupPasswordInput" class="input passwdInput" type="text" value="{{ .data.Encrypt.Password }}"/>
-                    <!--                    <div class="meta-value">{{ .data.Encrypt.Password }}</div>-->
+                    {{ if eq (deref .data.Encrypt.Method) "none"}}
+                    <span>*未设定*</span>
+                    {{end}}
+                    {{ if eq (deref .data.Encrypt.Method) "recipient"}}
+                    <span>（收件人名称）</span>
+                    {{end}}
+                    {{ if eq (deref .data.Encrypt.Method) "password"}}
+                    <input id="lookupPasswordInput" class="input passwdInput" type="text"
+                           value="{{ .data.Encrypt.Password }}"/>
+                    {{end}}
                 </div>
                 {{end}}
                 <div class="meta-item" style="grid-column: 1 / -1;">
@@ -172,7 +180,7 @@
         {{if .records}}
         <h2>查询记录</h2>
         {{ range .records }}
-        <div class="card">
+        <div class="card meta">
             <div class="meta-item">
                 <div class="meta-label">
                     <i class="fa-solid fa-clock"></i> 访问时间
@@ -187,21 +195,31 @@
                     <i class="fa-solid fa-display"></i> 系统
                     <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
                 </div>
-                <div class="meta-value">{{.UAObj.OS}} {{.UAObj.OSVersion}}</div>
+                <div class="meta-value">{{.UAObj.OS}} {{.UAObj.OSVersion}} {{.UAObj.Name}} {{.UAObj.Version}}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">
-                    <i class="fa-solid fa-globe"></i> 浏览器
-                    <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
+                    <i class="fa-solid fa-globe"></i> 地点
+
                 </div>
-                <div class="meta-value"> {{.UAObj.Name}} {{.UAObj.Version}}</div>
+                <div class="meta-value"> {{.IPObj.Country}}
+                    {{ if .IPObj.Region}}
+                    {{.IPObj.Region}}
+                    {{end}}
+                    {{if .IPObj.City}}
+                    {{.IPObj.City}}
+                    {{end}}
+                    {{ .IPObj.ASOrg}}
+                </div>
             </div>
 
             <div class="meta-item">
                 <div class="meta-label">
                     <i class="fa-solid fa-network-wired"></i> IP地址
                 </div>
-                <div class="meta-value">{{.IP}}</div>
+                <div class="meta-value">{{.IP}}
+
+                </div>
             </div>
 
         </div>

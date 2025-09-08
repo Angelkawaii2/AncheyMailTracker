@@ -72,10 +72,11 @@ func (s *Service) Lookup(ipStr string) (*IPInfo, error) {
 		return nil, err
 	}
 
+	s2 := "zh-CN"
 	info := &IPInfo{
 		CountryISO: cityRec.Country.IsoCode,
-		Country:    cityRec.Country.Names["en"],
-		City:       cityRec.City.Names["en"],
+		Country:    cityRec.Country.Names[s2],
+		City:       cityRec.City.Names[s2],
 		Timezone:   cityRec.Location.TimeZone,
 		Latitude:   cityRec.Location.Latitude,
 		Longitude:  cityRec.Location.Longitude,
@@ -84,7 +85,7 @@ func (s *Service) Lookup(ipStr string) (*IPInfo, error) {
 	}
 	// 省/州（可能为空）
 	if len(cityRec.Subdivisions) > 0 {
-		info.Region = cityRec.Subdivisions[0].Names["en"]
+		info.Region = cityRec.Subdivisions[0].Names[s2]
 	}
 	return info, nil
 }
