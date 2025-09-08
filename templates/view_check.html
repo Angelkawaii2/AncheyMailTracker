@@ -15,7 +15,11 @@
 <body>
     <div class="wrap">
         <form class="card" method="post" action="/lookup/">
-            <h1 style="text-align: center">查询{{ .Key }}</h1>
+            <div>
+                <h1 style="text-align: center">安洁露邮件溯源查询系统——查询: {{ .Key }}</h1>
+                <p>该系统用于追溯明信片、信件、包裹等发出时的状态</p>
+                <p>请扫描邮件二维码查询，或手动输入：</p>
+            </div>
             {{if .error}}
             <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
             {{end}}
