@@ -45,6 +45,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/app/data:rw
+      - ./geo_db:/app/geo_db:ro
 volumes:
   gocache:
   gobuild:
