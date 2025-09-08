@@ -316,9 +316,9 @@ func main() {
 			}, controllers.GetEntryView(entriesSvc, geoService))
 	}
 
-	port := os.Getenv("PORT")
-	log.Printf("listening on %s (DATA_DIR=%s)", port, dataDir)
-	if err := r.Run("0.0.0.0:" + port); err != nil {
+	address := os.Getenv("ADDRESS")
+	log.Printf("listening on %s (DATA_DIR=%s)", address, dataDir)
+	if err := r.Run(address); err != nil {
 		log.Fatal(err)
 	}
 }
