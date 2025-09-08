@@ -37,6 +37,9 @@ services:
     image: ancheymailtracker:prod         # 生产镜像名（用于本机验证或推仓库）
     env_file:
       - .env
+    environment:
+      CITY_MMDB: "/app/geo_db/GeoLite2-City.mmdb"
+      ASN_MMDB: "/app/geo_db/GeoLite2-ASN.mmdb"
     ports:
       - "8080:8080"
     restart: unless-stopped
