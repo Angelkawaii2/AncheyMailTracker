@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"crypto/subtle"
 	"encoding/hex"
 	"html/template"
 	"log"
@@ -13,12 +12,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"slices"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func main() {
@@ -99,221 +94,9 @@ func main() {
 	r.LoadHTMLGlob("templates/*.html")
 	r.Static("/styles", "./styles")
 
-	r.GET("/login", func(c *gin.Context) {
-		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
-	})
-
-	r.POST("/login", middleware.TurnstileGuard(middleware.TurnstileConfig{
-		Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
-			res, err := services.VerifyTurnstile(c, token, ip)
-			return middleware.Result{Success: err == nil && res.Success}, err
-		},
-		OnFail: func(c *gin.Context, err error) {
-			// 失败统一回到验证页（带上 SiteKey）
-			helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
-			return
-		},
-	}), func(c *gin.Context) {
-		password := c.PostForm("password")
-		adminToken := os.Getenv("ADMIN_TOKEN")
-
-		target := c.PostForm("redirect")
-		if target == "" {
-			target = "/"
-		}
-
-		if subtle.ConstantTimeCompare([]byte(password), []byte(adminToken)) != 1 {
-			helper.RenderHTML(c, http.StatusUnauthorized, "login.html", gin.H{
-				"Error": "账号或密码错误",
-			})
-			return
-		}
-		// 设置 Cookie (HttpOnly，防止 JS 获取)
-		c.SetCookie("X-Admin-Token", adminToken, 3600*24, "/", "", false, true)
-		// 登录成功后跳转
-		c.Redirect(http.StatusSeeOther, target)
-	})
-
-	createHandler := func(c *gin.Context) {
-		key := c.Param("key")
-		c.HTML(http.StatusOK, "create.html", gin.H{
-			"Key": key,
-		})
-	}
-	r.GET("/create", middleware.RequireLogin(), createHandler)
-	r.GET("/create/:key", middleware.RequireLogin(), createHandler)
-
-	// 首页
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{"Authenticated": middleware.IsAdmin(c)})
-	})
-
-	r.GET("/img/:key/:imgName", func(c *gin.Context) {
-		// todo 检查origin头
-		key := c.Param("key")
-		img := c.Param("imgName")
-
-		base := filepath.Join(".", "data", "entries") // . 表示当前工作目录
-		abs := filepath.Join(base, key, "images", img)
-		c.File(abs)
-	})
-
-	admin := r.Group("/admin", middleware.RequireLogin())
-	{
-		//admin.GET('/')
-		admin.GET("/keys/generate", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "key_gen.html", gin.H{})
-		})
-		admin.POST("/keys/generate", controllers.KeysGenerate(keysSvc))
-		admin.GET("/keys/status/:key", controllers.KeyStatus(keysSvc, entriesSvc))
-		admin.GET("/keys", controllers.KeysList(keysSvc, entriesSvc))
-	}
-
-	api := r.Group("")
-	{
-		//二维码落地页
-		api.GET("/s/:key", controllers.GetEntryRouteView(entriesSvc, keysSvc))
-		//创建表单提交
-		api.POST("/entry", controllers.PostEntry(entriesSvc, fileSrvc, keysSvc))
-
-		//查询页，没有密码时要求用户输入
-		viewCheckHandler := func(c *gin.Context) {
-			key := c.Param("key")
-			//读取目标key的数据
-			entry, _ := entriesSvc.LoadData(key)
-			if entry != nil {
-				if entry.Data.Encrypt.Method != nil {
-					if *entry.Data.Encrypt.Method == "recipient" {
-						helper.RenderHTML(c, http.StatusOK, "view_check.html", gin.H{"Key": key, "EncryptType": "recipient"})
-						return
-					}
-				}
-			}
-			helper.RenderHTML(c, http.StatusOK, "view_check.html", gin.H{"Key": key})
-		}
-		api.GET("/lookup/", viewCheckHandler)
-		api.GET("/lookup/:key", viewCheckHandler)
-
-		//查询表单提交点
-		api.POST("/lookup/", middleware.TurnstileGuard(middleware.TurnstileConfig{
-			Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
-				res, err := services.VerifyTurnstile(c, token, ip)
-				return middleware.Result{Success: err == nil && res.Success}, err
-			},
-			OnFail: func(c *gin.Context, err error) {
-				// 失败统一回到验证页（带上 SiteKey）
-				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html", gin.H{"error": "验证码核验失败，请重试。"})
-				return
-			},
-		}), func(c *gin.Context) {
-			key := c.PostForm("keyID")
-			formPassword := c.PostForm("formPassword")
-
-			//读取目标key的数据
-			entry, err := entriesSvc.LoadData(key)
-			if err != nil {
-				//转全大写再查一次
-				entry, err = entriesSvc.LoadData(strings.ToUpper(key))
-			}
-			if err != nil {
-				log.Println(err)
-				//无数据跳转回首页
-				helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
-					gin.H{"Key": key, "error": "ID不存在，请检查输入是否有误"},
-				)
-				return
-			}
-
-			//鉴权
-			encrypt := entry.Data.Encrypt
-			if encrypt != nil {
-				method := encrypt.Method
-				if method != nil {
-					//验证收件人
-					if *method == "recipient" {
-						name := entry.Data.RecipientName
-						if name == nil || subtle.ConstantTimeCompare([]byte(formPassword), []byte(*name)) != 1 {
-							helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
-								gin.H{"Key": key, "error": "收件人核验失败，请检查输入是否正确（大小写、空格？）"})
-							return
-						}
-					}
-					if *method == "password" {
-						passwd := encrypt.Password
-						if passwd != nil {
-							if subtle.ConstantTimeCompare([]byte(*passwd), []byte(formPassword)) != 1 {
-								helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
-									gin.H{"Key": key, "error": "密码核验失败，请检查输入是否正确（大小写、空格？）"})
-
-								return
-							}
-						}
-					}
-				}
-			}
-
-			//过鉴权，在这里写日志？
-			//不记录管理员查询 todo 可以改成表单
-			if !middleware.IsAdmin(c) {
-				// Record UA only if history.json exists for this key
-				ua := c.Request.UserAgent()
-				ip := c.ClientIP()
-				_ = entriesSvc.RecorduaNewlinejson(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})
-			}
-
-			// ========== JWT：读取 -> 解析 -> 追加 -> 回写 ==========
-			prevTok := services.ReadTokenFromRequest(c)
-
-			claims, _ := services.ParseClaims(prevTok) // 解析失败也不阻塞；给新 claims
-
-			// 初始化基础字段（如 scope、iat），保持幂等
-			if claims.Scope == "" {
-				claims.Scope = "page:view"
-			}
-			if claims.IssuedAt == nil {
-				claims.IssuedAt = jwt.NewNumericDate(time.Now())
-			}
-			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(90 * 24 * time.Hour))
-
-			// 追加允许访问的 key（去重）
-			claims.AllowKeyList = services.AppendAllowKey(claims.AllowKeyList, key)
-
-			// 签发并写回 Cookie
-			if err := services.IssueCookie(c, claims); err != nil {
-				log.Println("issue jwt error:", err)
-				helper.RenderHTML(c, http.StatusInternalServerError, "view_check.html",
-					gin.H{"error": "issue jwt error"})
-				return
-			}
-
-			//写cookie/jwt 跳转到目标页
-			c.Redirect(http.StatusSeeOther, "/view/"+key)
-			return
-		})
-
-		//视图实际加载页
-		api.GET("/view/:key/",
-			//jwt鉴权中间件
-			func(c *gin.Context) {
-				key := c.Param("key")
-				//非管理才鉴权有无jwt
-				if !middleware.IsAdmin(c) {
-					tok := services.ReadTokenFromRequest(c)
-					claims, err := services.ParseClaims(tok)
-					if err != nil || claims == nil {
-						helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限1", "Key": key})
-						c.Abort()
-						return
-					}
-					if !slices.Contains(claims.AllowKeyList, key) {
-						helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
-						c.Abort()
-						return
-					}
-				}
-				c.Next()
-			}, controllers.GetEntryView(entriesSvc, geoService))
-	}
+	controllers.RegisterAuthRoutes(r)
+	controllers.RegisterAdminRoutes(r, keysSvc, entriesSvc)
+	controllers.RegisterEntryRoutes(r, entriesSvc, fileSrvc, keysSvc, geoService)
 
 	address := os.Getenv("ADDRESS")
 	log.Printf("listening on %s (DATA_DIR=%s)", address, dataDir)

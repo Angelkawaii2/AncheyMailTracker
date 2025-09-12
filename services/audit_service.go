@@ -32,7 +32,9 @@ func (s *EntriesService) RecorduaNewlinejson(key string, rec HistoryRecord) erro
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	enc := json.NewEncoder(f)
 	return enc.Encode(rec) // 每条一行
@@ -48,7 +50,9 @@ func (s *EntriesService) ReadUARecords(key string) ([]HistoryRecord, error) {
 		}
 		return nil, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	var records []HistoryRecord
 	dec := json.NewDecoder(f)

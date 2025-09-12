@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 全局登录状态记录
+// AdminAuthMiddleware 全局登录状态记录
 func AdminAuthMiddleware() gin.HandlerFunc {
 	adminToken := os.Getenv("ADMIN_TOKEN")
 	return func(c *gin.Context) {

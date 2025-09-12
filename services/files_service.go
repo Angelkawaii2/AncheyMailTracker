@@ -27,7 +27,7 @@ import (
 type FilesService struct{ dataDir string }
 
 func NewFilesService(dataDir string) *FilesService { return &FilesService{dataDir: dataDir} }
-func (s *FilesService) SaveImage(key string, file multipart.File, removeExif bool) (string, error) {
+func (s *FilesService) SaveImage(key string, file multipart.File) (string, error) {
 	if !models.ValidKey(key) {
 		return "", errors.New("invalid key format")
 	}

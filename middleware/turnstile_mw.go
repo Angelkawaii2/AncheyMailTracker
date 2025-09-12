@@ -23,7 +23,7 @@ type TurnstileConfig struct {
 	OnFail func(c *gin.Context, err error)
 }
 
-// Context 中保存的 key，方便下游读取结果
+// CtxTurnstileResult Context 中保存的 key，方便下游读取结果
 const CtxTurnstileResult = "turnstile:result"
 
 func TurnstileGuard(cfg TurnstileConfig) gin.HandlerFunc {

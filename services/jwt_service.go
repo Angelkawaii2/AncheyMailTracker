@@ -25,7 +25,7 @@ type AccessClaims struct {
 	jwt.RegisteredClaims
 }
 
-// 工具：从 Cookie / Authorization 里取出 token
+// ReadTokenFromRequest 工具：从 Cookie / Authorization 里取出 token
 func ReadTokenFromRequest(c *gin.Context) string {
 	// 1) Cookie 优先
 	if ck, err := c.Request.Cookie(jwtCookieName); err == nil && ck.Value != "" {
@@ -39,7 +39,7 @@ func ReadTokenFromRequest(c *gin.Context) string {
 	return ""
 }
 
-// 工具：解析 token -> claims（容错：解析失败返回空 claims）
+// ParseClaims 工具：解析 token -> claims（容错：解析失败返回空 claims）
 func ParseClaims(tok string) (*AccessClaims, error) {
 	if tok == "" {
 		return &AccessClaims{}, nil
@@ -59,7 +59,7 @@ func ParseClaims(tok string) (*AccessClaims, error) {
 	return &AccessClaims{}, fmt.Errorf("claims cast error")
 }
 
-// 工具：将新的 key 追加到 allowKeyList（去重）
+// AppendAllowKey 工具：将新的 key 追加到 allowKeyList（去重）
 func AppendAllowKey(list []string, key string) []string {
 	if key == "" {
 		return list
@@ -70,7 +70,7 @@ func AppendAllowKey(list []string, key string) []string {
 	return list
 }
 
-// 工具：签发并写回 Cookie
+// IssueCookie 工具：签发并写回 Cookie
 func IssueCookie(c *gin.Context, claims *AccessClaims) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString(hmacSecret)

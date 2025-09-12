@@ -8,7 +8,7 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-type Service struct {
+type GeoService struct {
 	city *geoip2.Reader
 	asn  *geoip2.Reader
 }
@@ -25,7 +25,7 @@ type IPInfo struct {
 	ASOrg      string  `json:"as_org"`
 }
 
-func NewGeoSerice(cityDBPath, asnDBPath string) (*Service, error) {
+func NewGeoSerice(cityDBPath, asnDBPath string) (*GeoService, error) {
 	c, err := geoip2.Open(cityDBPath)
 	if err != nil {
 		return nil, err
@@ -35,10 +35,10 @@ func NewGeoSerice(cityDBPath, asnDBPath string) (*Service, error) {
 		_ = c.Close()
 		return nil, err
 	}
-	return &Service{city: c, asn: a}, nil
+	return &GeoService{city: c, asn: a}, nil
 }
 
-func (s *Service) Close() error {
+func (s *GeoService) Close() error {
 	var err1, err2 error
 	if s.city != nil {
 		err1 = s.city.Close()
@@ -52,8 +52,8 @@ func (s *Service) Close() error {
 	return err2
 }
 
-// 传入字符串 IP；内部同时兼容 IPv4/IPv6；私网/无效地址直接报错
-func (s *Service) Lookup(ipStr string) (*IPInfo, error) {
+// Lookup 传入字符串 IP；内部同时兼容 IPv4/IPv6；私网/无效地址直接报错
+func (s *GeoService) Lookup(ipStr string) (*IPInfo, error) {
 	ipStr = strings.TrimSpace(ipStr)
 	addr, err := netip.ParseAddr(ipStr)
 	if err != nil {

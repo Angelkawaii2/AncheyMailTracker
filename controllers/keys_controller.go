@@ -56,7 +56,7 @@ func KeysGenerate(keys *services.KeysService) gin.HandlerFunc {
 	}
 }
 
-// GET /admin/keys/status/:key
+// KeyStatus GET /admin/keys/status/:key
 func KeyStatus(keys *services.KeysService, entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		k := c.Param("key")
@@ -74,7 +74,7 @@ func KeyStatus(keys *services.KeysService, entries *services.EntriesService) gin
 	}
 }
 
-// GET /admin/keys
+// KeysList GET /admin/keys
 func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		all := keys.List()
