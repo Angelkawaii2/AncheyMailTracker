@@ -22,13 +22,12 @@
             <label for="entryId">
                 <i class="fa-solid fa-fingerprint"></i> ID: ({{ .Key }})
             </label>
-            <input id="entryId" name="entryId" type="text" value="{{ .Key }}" required/>
+            <input id="entryId" name="entryId" type="text" value="{{ .Key }}" required autocomplete="off"/>
             {{else}}
             <label for="entryId">
                 <i class="fa-solid fa-fingerprint"></i> ID
             </label>
-            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" value="{{ .Key }}"
-                   required/>
+            <input id="entryId" name="entryId" type="text" placeholder="请输入或直接扫描二维码" required/>
             {{end}}
 
             <label for="postDate">
