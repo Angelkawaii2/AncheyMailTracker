@@ -24,7 +24,7 @@
             <p style="color: #ca0000;font-weight: bold">错误: {{.error}}</p>
             {{end}}
             <label for="keyID"> ID: </label>
-            <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+            <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID" autocapitalize="on">
             {{if eq .EncryptType "recipient" }}
             <label for="password"> 收件人名称: </label>
             <input id="password" name="formPassword" type="text" class="passwdInput"

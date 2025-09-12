@@ -82,7 +82,7 @@ func IssueCookie(c *gin.Context, claims *AccessClaims) error {
 		Value:    signed,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true, // 生产环境必须 https
+		Secure:   gin.Mode() == gin.ReleaseMode, // 生产环境必须 https
 		SameSite: http.SameSiteLaxMode,
 		// 不设置 Expires/MaxAge -> 会话 Cookie；如需长期保存可设置 Expires
 	})

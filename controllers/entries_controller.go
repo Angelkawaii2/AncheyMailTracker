@@ -351,6 +351,7 @@ func RegisterEntryRoutes(r *gin.Engine,
 					c.Abort()
 					return
 				}
+				log.Println("availbleKeys:", claims.AllowKeyList)
 				if !slices.Contains(claims.AllowKeyList, key) {
 					helper.RenderHTML(c, http.StatusForbidden, "view_check.html", gin.H{"error": "无访问权限2", "Key": key})
 					c.Abort()
