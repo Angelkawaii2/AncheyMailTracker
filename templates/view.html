@@ -108,7 +108,7 @@
                     <div class="meta-label">
                         <i class="fa-regular fa-clock"></i> 创建时间
                     </div>
-                    <div class="meta-value ts" data-ts="{{ .CreatedAt }}">{{ .CreatedAt }}</div>
+                    <div id="createdTime" class="meta-value" data-ts="{{ .CreatedAt }}"></div>
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">
@@ -242,6 +242,7 @@
             const lb = document.getElementById('lightbox');
             const lbImg = document.getElementById('lbImg');
             const lbClose = document.getElementById('lbClose');
+            const createdTime = document.getElementById('createdTime');
 
             function open(src) {
                 lbImg.src = src;
@@ -271,6 +272,8 @@
                 const d = new Date(utc);
                 el.textContent = d.toLocaleString("zh-cn"); // 用户当前时区/地区显示
             });
+            const d = new Date(Number(createdTime.dataset.ts))
+            createdTime.textContent = d.toLocaleString("zh-CN");
         })();
 
     </script>

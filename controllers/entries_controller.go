@@ -128,7 +128,7 @@ func GetEntryView(entries *services.EntriesService, service *services.Service) g
 		if data != nil {
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
 				"Key":       key,
-				"CreatedAt": data.CreatedAt,
+				"CreatedAt": data.CreatedAt.UnixMilli(),
 				"data":      data.Data,
 				"records":   records,
 			})
