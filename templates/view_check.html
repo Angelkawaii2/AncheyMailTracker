@@ -25,8 +25,15 @@
             {{end}}
             <label for="keyID"> ID: </label>
             <input id="keyID" name="keyID" type="text" value="{{.Key}}" placeholder="请扫描信件二维码或输入标签上的ID">
+            {{if eq .EncryptType "recipient" }}
+            <label for="password"> 收件人名称: </label>
+            <input id="password" name="formPassword" type="text" class="passwdInput"
+                   placeholder="信件上的收信人名称">
+            {{else}}
             <label for="password"> 查询码: </label>
-            <input id="password" name="formPassword" type="text" class="passwdInput" placeholder="查询密码（注意大小写）（无密码则无需填写）">
+            <input id="password" name="formPassword" type="text" class="passwdInput"
+                   placeholder="查询密码（注意大小写）（无密码则无需填写）">
+            {{end}}
             <div class="cf-turnstile" data-sitekey="{{.SiteKey}}"
                  data-callback="onTurnstileSuccess"></div>
             <button id="submitBtn" class="btn" type="submit" disabled>验证中...</button>

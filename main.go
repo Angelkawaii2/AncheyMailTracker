@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
-	"fmt"
 	"html/template"
 	"log"
 	"mailtrackerProject/controllers"
@@ -104,21 +103,6 @@ func main() {
 		helper.RenderHTML(c, http.StatusOK, "login.html", gin.H{"Redirect": c.Query("go")})
 	})
 
-	r.GET("/ip", func(c *gin.Context) {
-		ip := c.Query("port")
-		if ip == "" {
-			ip = c.ClientIP()
-		}
-		fmt.Println("---------------------------")
-		fmt.Println(ip)
-		info, err := geoService.Lookup(ip)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "ip": ip})
-			return
-		}
-		c.JSON(http.StatusOK, info)
-	})
-
 	r.POST("/login", middleware.TurnstileGuard(middleware.TurnstileConfig{
 		Verify: func(c *gin.Context, token, ip string) (middleware.Result, error) {
 			res, err := services.VerifyTurnstile(c, token, ip)
@@ -195,6 +179,16 @@ func main() {
 		//查询页，没有密码时要求用户输入
 		viewCheckHandler := func(c *gin.Context) {
 			key := c.Param("key")
+			//读取目标key的数据
+			entry, _ := entriesSvc.LoadData(key)
+			if entry != nil {
+				if entry.Data.Encrypt.Method != nil {
+					if *entry.Data.Encrypt.Method == "recipient" {
+						helper.RenderHTML(c, http.StatusOK, "view_check.html", gin.H{"Key": key, "EncryptType": "recipient"})
+						return
+					}
+				}
+			}
 			helper.RenderHTML(c, http.StatusOK, "view_check.html", gin.H{"Key": key})
 		}
 		api.GET("/lookup/", viewCheckHandler)
