@@ -20,7 +20,7 @@ func RenderHTML(c *gin.Context, status int, tmpl string, data gin.H) {
 
 // RandKey 使用 crypto/rand 生成不可预测 key；字符集避免易混淆字符
 func RandKey(length int) (string, error) {
-	const al = "ABCDEFHJKLMNPQRSTWXY123456789" // 31 chars
+	const al = "ACDEFHJKLMNPQRSTWXY123456789" // 31 chars
 	var out = make([]byte, length)
 	max := big.NewInt(int64(len(al)))
 	for i := 0; i < length; i++ {
