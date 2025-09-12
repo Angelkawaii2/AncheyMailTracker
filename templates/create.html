@@ -22,7 +22,8 @@
             <label for="entryId">
                 <i class="fa-solid fa-fingerprint"></i> ID: ({{ .Key }})
             </label>
-            <input id="entryId" name="entryId" type="text" value="{{ .Key }}" required autocomplete="off"/>
+            <input id="entryId" name="entryId" type="text" value="{{ .Key }}" required readonly autocapitalize="on"
+                   autocorrect="off" spellcheck="false" autocomplete="off"/>
             {{else}}
             <label for="entryId">
                 <i class="fa-solid fa-fingerprint"></i> ID
@@ -55,7 +56,7 @@
                     <label for="passwordInput">
                         输入密码 (留空则系统自动生成 4 位随机字符):
                     </label>
-                    <input id="passwordInput" type="password" name="encryptPassword">
+                    <input id="passwordInput" type="password" name="encryptPassword" autocomplete="new-password">
                 </div>
 
             </fieldset>
