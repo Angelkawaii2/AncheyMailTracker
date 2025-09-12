@@ -23,7 +23,7 @@ services:
       - "8080:8080"            # 暴露应用端口（与代码监听一致）
       - "2345:2345"            # 预留给 delve 远程调试（可删）
     healthcheck:
-      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:${PORT}/healthy || exit 1" ]
+      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:8080/healthy || exit 1" ]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -46,6 +46,12 @@ services:
     volumes:
       - ./data:/app/data:rw
       - ./geo_db:/app/geo_db:ro
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:8080/healthy || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 volumes:
   gocache:
   gobuild:
