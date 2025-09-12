@@ -24,7 +24,7 @@ services:
       - "2345:2345"            # 预留给 delve 远程调试（可删）
     healthcheck:
       test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:8080/healthy || exit 1" ]
-      interval: 10s
+      interval: 60s
       timeout: 3s
       retries: 5
       start_period: 10s
@@ -48,10 +48,10 @@ services:
       - ./geo_db:/app/geo_db:ro
     healthcheck:
       test: [ "CMD", "bash", "-c", "wget -qO- http://localhost:8080/healthy || exit 1" ]
-      interval: 10s
+      interval: 60s
       timeout: 3s
       retries: 5
-      start_period: 10s
+      start_period: 60s
 volumes:
   gocache:
   gobuild:
