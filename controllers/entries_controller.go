@@ -128,6 +128,7 @@ func GetEntryView(entries *services.EntriesService, service *services.GeoService
 		for i := range records {
 			records[i].UAObj = helper.ParseUA(records[i].UA)
 			records[i].IPObj, _ = service.Lookup(records[i].IP)
+			records[i].Timestamp = records[i].Time.UnixMilli()
 		}
 
 		if data != nil {
