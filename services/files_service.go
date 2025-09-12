@@ -27,9 +27,10 @@ import (
 type FilesService struct{ dataDir string }
 
 func NewFilesService(dataDir string) *FilesService { return &FilesService{dataDir: dataDir} }
-func (s *FilesService) SaveImage(key string, file multipart.File) (string, error) {
+
+func (s *FilesService) SaveImage(key string, file multipart.File, fh *multipart.FileHeader) (string, string, error) {
 	if !models.ValidKey(key) {
-		return "", errors.New("invalid key format")
+		return "", "", errors.New("invalid key format")
 	}
 	defer file.Close()
 
@@ -39,55 +40,87 @@ func (s *FilesService) SaveImage(key string, file multipart.File) (string, error
 	header := make([]byte, 8192)
 	n, err := io.ReadFull(io.LimitReader(file, int64(len(header))), header)
 	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-		return "", fmt.Errorf("read header failed: %w", err)
+		return "", "", fmt.Errorf("read header failed: %w", err)
 	}
 	header = header[:n]
 
 	mediaType, err := detectMime(header)
 	if err != nil {
-		return "", fmt.Errorf("unsupported file type: %w", err)
+		return "", "", fmt.Errorf("unsupported file type: %w", err)
 	}
 	log.Printf("detected media type: %s", mediaType)
 
 	// 确保目录存在
 	dir := filepath.Join(s.dataDir, "entries", key, "images")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", fmt.Errorf("mkdir failed: %w", err)
+		return "", "", fmt.Errorf("mkdir failed: %w", err)
 	}
 
 	// 把整个文件读到内存（仍然限制大小）
 	lr := io.LimitReader(io.MultiReader(bytes.NewReader(header), file), maxUpload+1)
 	buf, err := io.ReadAll(lr)
 	if err != nil {
-		return "", fmt.Errorf("read file failed: %w", err)
+		return "", "", fmt.Errorf("read file failed: %w", err)
 	}
 	if int64(len(buf)) > maxUpload {
-		return "", errors.New("file too large")
+		return "", "", errors.New("file too large")
+	}
+
+	baseName := uuid.New().String()
+	var origName string
+
+	// 是否为 HEIF/HEIC/AVIF
+	// 如果是 HEIF 系列，则保存原始文件一份（扩展名来自原始文件名）
+	if strings.HasPrefix(mediaType, "image/heif") || strings.HasPrefix(mediaType, "image/heic") || strings.HasPrefix(mediaType, "image/avif") {
+		ext := strings.ToLower(filepath.Ext(fh.Filename))
+		if ext == "" {
+			ext = ".heic" // 兜底
+		}
+		origName = baseName + ext
+		origPath := filepath.Join(dir, origName)
+		if err := os.WriteFile(origPath, buf, 0o644); err != nil {
+			return "", "", fmt.Errorf("write original file failed: %w", err)
+		}
 	}
 
 	// 解码图片
 	img, err := decodeImage(buf, mediaType)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// 生成文件名
-	name := uuid.New().String() + ".webp"
+
+	name := baseName + ".webp"
 	abs := filepath.Join(dir, name)
 
 	dst, err := os.Create(abs)
 	if err != nil {
-		return "", fmt.Errorf("create file failed: %w", err)
+		return "", "", fmt.Errorf("create file failed: %w", err)
 	}
 	defer dst.Close()
 
 	// webp 画质
 	options, _ := encoder.NewLossyEncoderOptions(encoder.PresetPhoto, 75)
 	if err := webp.Encode(dst, img, options); err != nil {
-		return "", fmt.Errorf("webp encode failed: %w", err)
+		return "", "", fmt.Errorf("webp encode failed: %w", err)
 	}
 
-	return name, nil
+	return name, origName, nil
+}
+
+// 根据 MIME 返回对应扩展名
+func heifExt(mediaType string) string {
+	switch mediaType {
+	case "image/heic":
+		return ".heic"
+	case "image/heif":
+		return ".heif"
+	case "image/avif":
+		return ".avif"
+	default:
+		return "" // 不会走到这里
+	}
 }
 
 // decodeImage 根据类型选择解码器

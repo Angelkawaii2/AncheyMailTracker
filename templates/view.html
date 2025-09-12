@@ -154,10 +154,20 @@
                 </div>
             </section>
 
-            {{ if .data.Images }}
+            {{ if .Images }}
             <div class="gallery">
+
+                {{ range $base, $vers := .Images }}
+                <picture>
+                    {{ with index $vers ".heic" }}
+                    <source srcset="/img/{{$.Key}}/{{ . }}" type="image/heic">
+                    {{ end }}
+                    <img class="thumb" src="/img/{{$.Key}}/{{$base}}.webp" alt="{{ $base }}" class="preview-img">
+                </picture>
+                {{ end }}
+
                 {{ range .data.Images }}
-                <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">
+                <!--                <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">-->
                 {{ end }}
             </div>
             {{ end }}

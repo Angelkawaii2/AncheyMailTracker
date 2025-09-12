@@ -66,7 +66,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 				return
 			}
 
-			fileName, err := files.SaveImage(key, f)
+			fileName, origName, err := files.SaveImage(key, f, fh)
 			_ = f.Close() // 立即关闭，避免在循环里 defer 堆积
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -75,6 +75,9 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 			}
 
 			imageIDs = append(imageIDs, fileName)
+			if origName != "" {
+				imageIDs = append(imageIDs, origName)
+			}
 		}
 
 		data := services.EntryData{
@@ -130,6 +133,17 @@ func GetEntryView(entries *services.EntriesService, service *services.GeoService
 			records[i].IPObj, _ = service.Lookup(records[i].IP)
 			records[i].Timestamp = records[i].Time.UnixMilli()
 		}
+		grouped := map[string]map[string]string{} // baseName -> {ext: filename}
+		if data.Data.Images != nil && len(*data.Data.Images) > 0 {
+			for _, f := range *data.Data.Images {
+				ext := strings.ToLower(filepath.Ext(f)) // .heic / .webp
+				base := strings.TrimSuffix(f, ext)
+				if grouped[base] == nil {
+					grouped[base] = make(map[string]string)
+				}
+				grouped[base][ext] = f
+			}
+		}
 
 		if data != nil {
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
@@ -138,6 +152,7 @@ func GetEntryView(entries *services.EntriesService, service *services.GeoService
 				"CreatedAt": data.CreatedAt.UnixMilli(),
 				"data":      data.Data,
 				"records":   records,
+				"Images":    grouped,
 			})
 			return
 		}
