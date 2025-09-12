@@ -78,15 +78,32 @@ func KeyStatus(keys *services.KeysService, entries *services.EntriesService) gin
 func KeysList(keys *services.KeysService, entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		all := keys.List()
-		// annotate used flag by checking data existence
-		out := make([]gin.H, 0, len(all))
-		for _, ki := range all {
-			out = append(out, gin.H{
-				"key":        ki.Key,
-				"created_at": ki.CreatedAt.Format("2006-01-02 15:04:05"),
-				"used":       entries.HasData(ki.Key),
-			})
+		type KeyStatus struct {
+			Key       string
+			CreatedAt string
+			Used      bool
 		}
-		c.HTML(http.StatusOK, "key_view.html", out)
+
+		used := make([]KeyStatus, 0)
+		unused := make([]KeyStatus, 0)
+
+		for _, ki := range all {
+			ks := KeyStatus{
+				Key:       ki.Key,
+				CreatedAt: ki.CreatedAt.Format("2006-01-02 15:04:05"),
+				Used:      entries.HasData(ki.Key),
+			}
+			if ks.Used {
+				used = append(used, ks)
+			} else {
+				unused = append(unused, ks)
+			}
+		}
+
+		// 输出给模板
+		c.HTML(http.StatusOK, "key_view.html", gin.H{
+			"usedKeys":   used,
+			"unusedKeys": unused,
+		})
 	}
 }

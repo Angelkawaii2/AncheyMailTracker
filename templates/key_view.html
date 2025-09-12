@@ -61,7 +61,9 @@
     <div class="wrap">
         <h1>Key 列表</h1>
 
+        <h2>已使用的 Keys</h2>
         <div class="table-responsive">
+
             <table aria-label="Key 列表">
                 <thead>
                 <tr>
@@ -72,33 +74,47 @@
                 </tr>
                 </thead>
                 <tbody>
-                {{ range $it := . }}
-                {{ $id := index $it "key" }}
-                {{ $ts := index $it "created_at" }}
-                {{ $used := index $it "used" }}
+                {{ range .usedKeys }}
                 <tr>
-                    <td data-label="ID" class="keyid">{{ $id }}</td>
-                    <td data-label="创建时间">{{ $ts }}</td>
+                    <td data-label="ID" class="keyid">{{ .Key }}</td>
+                    <td data-label="创建时间">{{ .CreatedAt }}</td>
                     <td data-label="状态">
-                        {{ if $used }}
                         <span class="tag used">已使用</span>
-                        {{ else }}
-                        <span class="tag unused">未使用</span>
-                        {{ end }}
                     </td>
                     <td class="actions" data-label="操作">
-                        {{ if $used }}
-                        <a class="btn view" href="/view/{{ $id }}">查看</a>
-                        {{ else }}
-                        <a class="btn create" href="/create/{{ $id }}">创建</a>
-                        {{ end }}
+                        <a class="btn view" href="/view/{{ .Key }}">查看</a>
+                        <a class="btn create" href="/create/{{ .Key }}">覆盖</a>
                     </td>
                 </tr>
-                {{ else }}
+                {{end}}
+                </tbody>
+            </table>
+
+        </div>
+        <div class="table-responsive">
+            <h2>未使用的 Keys</h2>
+            <table aria-label="Key 列表">
+                <thead>
                 <tr>
-                    <td colspan="4">暂无数据</td>
+                    <th>ID</th>
+                    <th>创建时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
                 </tr>
-                {{ end }}
+                </thead>
+                <tbody>
+                {{ range .unusedKeys }}
+                <tr>
+                    <td data-label="ID" class="keyid">{{ .Key }}</td>
+                    <td data-label="创建时间">{{ .CreatedAt }}</td>
+                    <td data-label="状态">
+                        <span class="tag unused">未使用</span>
+                    </td>
+                    <td class="actions" data-label="操作">
+                        <a class="btn create" href="/create/{{ .Key }}">创建</a>
+                    </td>
+                </tr>
+                {{end}}
                 </tbody>
             </table>
         </div>
