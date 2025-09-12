@@ -159,10 +159,16 @@
 
                 {{ range $base, $vers := .Images }}
                 <picture>
+                    <!--<source srcset="/img/{{$.Key}}/{{ . }}" type="image/avif">-->
                     {{ with index $vers ".heic" }}
                     <source srcset="/img/{{$.Key}}/{{ . }}" type="image/heic">
                     {{ end }}
-                    <img class="thumb" src="/img/{{$.Key}}/{{$base}}.webp" alt="{{ $base }}" class="preview-img">
+                    <!--支持HDR照片-->
+                    {{ with index $vers ".jpeg" }}
+                    <source srcset="/img/{{$.Key}}/{{ . }}" type="image/jpeg">
+                    {{ end }}
+                    <!--最后才支持旧的 存量webp-->
+                    <img class="thumb preview-img" src="/img/{{$.Key}}/{{$base}}.webp" alt="{{ $base }}" data-full="">
                 </picture>
                 {{ end }}
 
@@ -286,6 +292,16 @@
                 // 格式化为中文时间
                 el.textContent = d.toLocaleString("zh-CN");
             });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll("picture img").forEach(img => {
+                    // 图片加载完成后，img.currentSrc 是浏览器最终选择的资源
+                    img.addEventListener("load", () => {
+                        img.dataset.full = img.currentSrc;
+                    });
+                });
+            });
+
         })();
 
     </script>

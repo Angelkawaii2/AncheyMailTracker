@@ -19,7 +19,6 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	"github.com/kolesa-team/go-webp/decoder"
-	"github.com/kolesa-team/go-webp/encoder"
 	"github.com/kolesa-team/go-webp/webp"
 	"github.com/strukturag/libheif/go/heif"
 )
@@ -39,7 +38,7 @@ func (s *FilesService) SaveImage(key string, file multipart.File, fh *multipart.
 	// 只读前 8KB 判断 MIME
 	header := make([]byte, 8192)
 	n, err := io.ReadFull(io.LimitReader(file, int64(len(header))), header)
-	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+	if err != nil && err != io.EOF && !errors.Is(err, io.ErrUnexpectedEOF) {
 		return "", "", fmt.Errorf("read header failed: %w", err)
 	}
 	header = header[:n]
@@ -68,45 +67,27 @@ func (s *FilesService) SaveImage(key string, file multipart.File, fh *multipart.
 
 	baseName := uuid.New().String()
 	var origName string
+	ext := strings.ToLower(filepath.Ext(fh.Filename))
 
 	// 是否为 HEIF/HEIC/AVIF
 	// 如果是 HEIF 系列，则保存原始文件一份（扩展名来自原始文件名）
+	//ios上上传会自动转换为jpg
+	fileName := baseName + ext
 	if strings.HasPrefix(mediaType, "image/heif") || strings.HasPrefix(mediaType, "image/heic") || strings.HasPrefix(mediaType, "image/avif") {
-		ext := strings.ToLower(filepath.Ext(fh.Filename))
-		if ext == "" {
-			ext = ".heic" // 兜底
-		}
-		origName = baseName + ext
+		origName = fileName
 		origPath := filepath.Join(dir, origName)
 		if err := os.WriteFile(origPath, buf, 0o644); err != nil {
 			return "", "", fmt.Errorf("write original file failed: %w", err)
 		}
 	}
 
-	// 解码图片
-	img, err := decodeImage(buf, mediaType)
+	abs := filepath.Join(dir, fileName)
+	err = os.WriteFile(abs, buf, 0o644)
 	if err != nil {
 		return "", "", err
 	}
 
-	// 生成文件名
-
-	name := baseName + ".webp"
-	abs := filepath.Join(dir, name)
-
-	dst, err := os.Create(abs)
-	if err != nil {
-		return "", "", fmt.Errorf("create file failed: %w", err)
-	}
-	defer dst.Close()
-
-	// webp 画质
-	options, _ := encoder.NewLossyEncoderOptions(encoder.PresetPhoto, 75)
-	if err := webp.Encode(dst, img, options); err != nil {
-		return "", "", fmt.Errorf("webp encode failed: %w", err)
-	}
-
-	return name, origName, nil
+	return fileName, origName, nil
 }
 
 // 根据 MIME 返回对应扩展名
