@@ -84,7 +84,6 @@ func main() {
 	r.GET("/healthy", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
-	//todo
 	r.TrustedPlatform = gin.PlatformCloudflare // 读取 CF-Connecting-IP
 	r.Use(gin.Recovery(), helper.AccessLogZap(logger))
 	r.Use(middleware.AdminAuthMiddleware())
@@ -259,13 +258,10 @@ func main() {
 				}
 			}
 
-			//todo 检查当前请求时间是否在范围内
 			//过鉴权，在这里写日志？
-			//todo 不记录管理员查询？（虽然管理员落地也不走这个路由
-			//if !middleware.IsAdmin(c) {
-			if true {
+			//不记录管理员查询 todo 可以改成表单
+			if !middleware.IsAdmin(c) {
 				// Record UA only if history.json exists for this key
-				//todo 记录用户浏览器语言
 				ua := c.Request.UserAgent()
 				ip := c.ClientIP()
 				_ = entriesSvc.RecorduaNewlinejson(key, services.HistoryRecord{Time: time.Now(), UA: ua, IP: ip})

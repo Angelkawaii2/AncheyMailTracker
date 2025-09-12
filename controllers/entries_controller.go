@@ -109,7 +109,7 @@ func PostEntry(entries *services.EntriesService, files *services.FilesService, k
 func GetEntryView(entries *services.EntriesService, service *services.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.Param("key")
-		//注入页面用
+		admin := c.GetBool("isAdmin")
 
 		data, err := entries.LoadData(key)
 		if err != nil {
@@ -128,6 +128,7 @@ func GetEntryView(entries *services.EntriesService, service *services.Service) g
 		if data != nil {
 			helper.RenderHTML(c, http.StatusOK, "view.html", gin.H{
 				"Key":       key,
+				"Admin":     admin,
 				"CreatedAt": data.CreatedAt.UnixMilli(),
 				"data":      data.Data,
 				"records":   records,

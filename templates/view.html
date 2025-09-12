@@ -103,12 +103,14 @@
 
             {{ if .data }}
             <section class="meta" aria-label="条目信息">
+                {{if .Admin}}
                 <div class="meta-item">
                     <div class="meta-label">
                         <i class="fa-regular fa-clock"></i> 创建时间
                     </div>
                     <div id="createdTime" class="meta-value" data-ts="{{ .CreatedAt }}"></div>
                 </div>
+                {{end}}
                 <div class="meta-item">
                     <div class="meta-label">
                         <i class="fa-solid fa-calendar-day"></i> 发件时间
@@ -136,7 +138,7 @@
                     <span>*未设定*</span>
                     {{end}}
                     {{ if eq (deref .data.Encrypt.Method) "recipient"}}
-                    <span>（收件人名称）</span>
+                    <span style="font-style: italic">（收件人名称）</span>
                     {{end}}
                     {{ if eq (deref .data.Encrypt.Method) "password"}}
                     <input id="lookupPasswordInput" class="input passwdInput" type="text"
