@@ -189,6 +189,7 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 func PostLookupHandler(entries *services.EntriesService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.PostForm("keyID")
+		key = strings.ToUpper(key)
 		formPassword := c.PostForm("formPassword")
 
 		//读取目标key的数据
@@ -214,7 +215,7 @@ func PostLookupHandler(entries *services.EntriesService) gin.HandlerFunc {
 				//验证收件人
 				if *method == "recipient" {
 					name := entry.Data.RecipientName
-					if name == nil || subtle.ConstantTimeCompare([]byte(formPassword), []byte(*name)) != 1 {
+					if name != nil && subtle.ConstantTimeCompare([]byte(helper.NormalizeString(formPassword)), []byte(helper.NormalizeString(*name))) != 1 {
 						helper.RenderHTML(c, http.StatusBadRequest, "view_check.html",
 							gin.H{"Key": key, "error": "收件人核验失败，请检查输入是否正确（大小写、空格？）"})
 						return

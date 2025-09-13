@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mileusna/useragent"
@@ -35,4 +36,15 @@ func RandKey(length int) (string, error) {
 
 func ParseUA(userAgent string) useragent.UserAgent {
 	return useragent.Parse(userAgent)
+}
+func NormalizeString(input string) string {
+	// 去除空格
+	s := strings.ReplaceAll(input, " ", "")
+	// 去除下划线
+	s = strings.ReplaceAll(s, "_", "")
+	// 去除横杠
+	s = strings.ReplaceAll(s, "-", "")
+	// 转换为小写
+	s = strings.ToLower(s)
+	return s
 }

@@ -15,7 +15,6 @@ services:
     env_file:
       - .env
       - .env.development
-      - .env.settings.local
     environment:
       CITY_MMDB: "/app/geo_db/GeoLite2-City.mmdb"
       ASN_MMDB: "/app/geo_db/GeoLite2-ASN.mmdb"
