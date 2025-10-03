@@ -94,6 +94,7 @@
                 grid-template-columns: 100px 1fr;
             }
         }
+
         .footer {
             color: #b4b4b4;
             text-align: center
@@ -101,216 +102,218 @@
     </style>
 </head>
 <body>
-    <div class="wrap">
-        <div class="card">
-            <h1 style="text-align: center">安洁露邮件查询: {{ .Key }}</h1>
+<div class="wrap">
+    <div class="card">
+        <h1 style="text-align: center">安洁露邮件查询: {{ .Key }}</h1>
 
-            {{ if .data }}
-            <section class="meta" aria-label="条目信息">
-                {{if .Admin}}
-                <div class="meta-item">
-                    <div class="meta-label">
-                        <i class="fa-regular fa-clock"></i> 创建时间
-                    </div>
-                    <div class="meta-value ts" data-ts="{{ .CreatedAt }}"></div>
+        {{ if .data }}
+        <section class="meta" aria-label="条目信息">
+            {{if .Admin}}
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-regular fa-clock"></i> 创建时间
                 </div>
+                <div class="meta-value ts" data-ts="{{ .CreatedAt }}"></div>
+            </div>
+            {{end}}
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-calendar-day"></i> 发件时间
+                </div>
+                <div class="meta-value">{{ .data.PostDate }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-user"></i> 收件人
+                </div>
+                <div class="meta-value">{{ .data.RecipientName }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-location-dot"></i> 发件地点
+                </div>
+                <div class="meta-value">{{ .data.OriginLocation }}</div>
+            </div>
+            {{ if .data.Encrypt.Method }}
+            <div class="meta-item">
+                <div class="meta-label">
+                    <i class="fa-solid fa-eye"></i> 查询密码
+                </div>
+                {{ if eq (deref .data.Encrypt.Method) "none"}}
+                <span>*未设定*</span>
                 {{end}}
-                <div class="meta-item">
-                    <div class="meta-label">
-                        <i class="fa-solid fa-calendar-day"></i> 发件时间
-                    </div>
-                    <div class="meta-value">{{ .data.PostDate }}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">
-                        <i class="fa-solid fa-user"></i> 收件人
-                    </div>
-                    <div class="meta-value">{{ .data.RecipientName }}</div>
-                </div>
-                <div class="meta-item">
-                    <div class="meta-label">
-                        <i class="fa-solid fa-location-dot"></i> 发件地点
-                    </div>
-                    <div class="meta-value">{{ .data.OriginLocation }}</div>
-                </div>
-                {{ if .data.Encrypt.Method }}
-                <div class="meta-item">
-                    <div class="meta-label">
-                        <i class="fa-solid fa-eye"></i> 查询密码
-                    </div>
-                    {{ if eq (deref .data.Encrypt.Method) "none"}}
-                    <span>*未设定*</span>
-                    {{end}}
-                    {{ if eq (deref .data.Encrypt.Method) "recipient"}}
-                    <span style="font-style: italic">（收件人名称）</span>
-                    {{end}}
-                    {{ if eq (deref .data.Encrypt.Method) "password"}}
-                    <input id="lookupPasswordInput" class="input passwdInput" type="text"
-                           value="{{ .data.Encrypt.Password }}"/>
-                    {{end}}
-                </div>
+                {{ if eq (deref .data.Encrypt.Method) "recipient"}}
+                <span style="font-style: italic">（收件人名称）</span>
                 {{end}}
-                <div class="meta-item" style="grid-column: 1 / -1;">
-                    <div class="meta-label">
-                        <i class="fa-regular fa-note-sticky"></i> 备注
-                    </div>
-                    <div class="meta-value">{{ .data.Remarks }}</div>
+                {{ if eq (deref .data.Encrypt.Method) "password"}}
+                <input id="lookupPasswordInput" class="input passwdInput" type="text"
+                       value="{{ .data.Encrypt.Password }}"/>
+                {{end}}
+            </div>
+            {{end}}
+            <div class="meta-item" style="grid-column: 1 / -1;">
+                <div class="meta-label">
+                    <i class="fa-regular fa-note-sticky"></i> 备注
                 </div>
-            </section>
+                <div class="meta-value">{{ .data.Remarks }}</div>
+            </div>
+        </section>
 
-            {{ if .Images }}
-            <div class="gallery">
+        {{ if .Images }}
+        <div class="gallery">
 
-                {{ range $base, $vers := .Images }}
-                <picture>
-                    <!--<source srcset="/img/{{$.Key}}/{{ . }}" type="image/avif">-->
-                    {{ with index $vers ".heic" }}
-                    <source srcset="/img/{{$.Key}}/{{ . }}" type="image/heic">
-                    {{ end }}
-                    <!--支持HDR照片-->
-                    {{ with index $vers ".jpeg" }}
-                    <source srcset="/img/{{$.Key}}/{{ . }}" type="image/jpeg">
-                    {{ end }}
-                    <!--最后才支持旧的 存量webp-->
-                    <img class="thumb preview-img" src="/img/{{$.Key}}/{{$base}}.webp" alt="{{ $base }}" data-full="">
-                </picture>
+            {{ range $base, $vers := .Images }}
+            <picture>
+                <!--<source srcset="/img/{{$.Key}}/{{ . }}" type="image/avif">-->
+                {{ with index $vers ".heic" }}
+                <source srcset="/img/{{$.Key}}/{{ . }}" type="image/heic">
                 {{ end }}
-
-                {{ range .data.Images }}
-                <!--                <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">-->
+                <!--支持HDR照片-->
+                {{ with index $vers ".jpeg" }}
+                <source srcset="/img/{{$.Key}}/{{ . }}" type="image/jpeg">
                 {{ end }}
-            </div>
+                <!--最后才支持旧的 存量webp-->
+                <img class="thumb preview-img" src="/img/{{$.Key}}/{{$base}}.webp" alt="{{ $base }}" data-full="">
+            </picture>
             {{ end }}
-            {{ else }}
-            <section class="meta" aria-label="条目信息">
-                <div class="meta-item" style="grid-column: 1 / -1;">
-                    <div class="meta-label">
-                        <i class="fa-regular fa-clock"></i> 创建时间
-                    </div>
-                    <div class="meta-value ts" data-ts="{{ .CreatedAt }}">{{ .CreatedAt }}</div>
-                </div>
-            </section>
+
+            {{ range .data.Images }}
+            <!--                <img class="thumb" src="/img/{{ $.Key }}/{{ . }}" alt="image" data-full="/img/{{ $.Key }}/{{ . }}">-->
             {{ end }}
-        </div>
-
-        {{if .records}}
-        <h2>查询记录</h2>
-        {{ range .records }}
-        <div class="card meta">
-            <div class="meta-item">
-                <div class="meta-label">
-                    <i class="fa-solid fa-clock"></i> 访问时间
-                </div>
-                <div class="meta-value">
-                    <time class="ts" data-ts="{{ .Timestamp }}"></time>
-                </div>
-            </div>
-
-            <div class="meta-item">
-                <div class="meta-label">
-                    <i class="fa-solid fa-display"></i> 系统
-                    <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
-                </div>
-                <div class="meta-value">{{.UAObj.OS}} {{.UAObj.OSVersion}} {{.UAObj.Name}} {{.UAObj.Version}}</div>
-            </div>
-            <div class="meta-item">
-                <div class="meta-label">
-                    <i class="fa-solid fa-globe"></i> 地点
-
-                </div>
-                <div class="meta-value"> {{.IPObj.Country}}
-                    {{ if .IPObj.Region}}
-                    {{.IPObj.Region}}
-                    {{end}}
-                    {{if .IPObj.City}}
-                    {{.IPObj.City}}
-                    {{end}}
-                    {{ .IPObj.ASOrg}}
-                </div>
-            </div>
-
-            <div class="meta-item">
-                <div class="meta-label">
-                    <i class="fa-solid fa-network-wired"></i> IP地址
-                </div>
-                <div class="meta-value">{{.IP}}
-
-                </div>
-            </div>
-
         </div>
         {{ end }}
-
-        {{end}}
-        <a class="footer" href="https://github.com/Angelkawaii2/AncheyMailTracker">项目地址:
-            github.com/Angelkawaii2/AncheyMailTracker </a>
-        <p class="footer">特别感谢: 派兹 提供服务器喵♥</p>
+        {{ else }}
+        <section class="meta" aria-label="条目信息">
+            <div class="meta-item" style="grid-column: 1 / -1;">
+                <div class="meta-label">
+                    <i class="fa-regular fa-clock"></i> 创建时间
+                </div>
+                <div class="meta-value ts" data-ts="{{ .CreatedAt }}">{{ .CreatedAt }}</div>
+            </div>
+        </section>
+        {{ end }}
     </div>
-
-
-    <!-- lightbox -->
-    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
-        <span class="close" id="lbClose" aria-label="Close">&times;</span>
-        <img id="lbImg" src="" alt="preview">
+    <div style="margin: auto auto">
+        <p style="color: rgba(255,255,255,0.47)">系统正在升级中哦，更多内容预计10月中旬更新~</p>
     </div>
+    {{if .records}}
+    <h2>查询记录</h2>
+    {{ range .records }}
+    <div class="card meta">
+        <div class="meta-item">
+            <div class="meta-label">
+                <i class="fa-solid fa-clock"></i> 访问时间
+            </div>
+            <div class="meta-value">
+                <time class="ts" data-ts="{{ .Timestamp }}"></time>
+            </div>
+        </div>
 
-    <script>
+        <div class="meta-item">
+            <div class="meta-label">
+                <i class="fa-solid fa-display"></i> 系统
+                <!-- 也可用 fa-laptop 或 fa-mobile-screen 视视觉偏好 -->
+            </div>
+            <div class="meta-value">{{.UAObj.OS}} {{.UAObj.OSVersion}} {{.UAObj.Name}} {{.UAObj.Version}}</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">
+                <i class="fa-solid fa-globe"></i> 地点
 
-        (function () {
-            const lb = document.getElementById('lightbox');
-            const lbImg = document.getElementById('lbImg');
-            const lbClose = document.getElementById('lbClose');
+            </div>
+            <div class="meta-value"> {{.IPObj.Country}}
+                {{ if .IPObj.Region}}
+                {{.IPObj.Region}}
+                {{end}}
+                {{if .IPObj.City}}
+                {{.IPObj.City}}
+                {{end}}
+                {{ .IPObj.ASOrg}}
+            </div>
+        </div>
 
-            function open(src) {
-                lbImg.src = src;
-                lb.classList.add('open');
-                document.body.style.overflow = 'hidden';
+        <div class="meta-item">
+            <div class="meta-label">
+                <i class="fa-solid fa-network-wired"></i> IP地址
+            </div>
+            <div class="meta-value">{{.IP}}
+
+            </div>
+        </div>
+
+    </div>
+    {{ end }}
+
+    {{end}}
+    <a class="footer" href="https://github.com/Angelkawaii2/AncheyMailTracker">项目地址:
+        github.com/Angelkawaii2/AncheyMailTracker </a>
+    <p class="footer">特别感谢: 派兹 提供服务器喵♥</p>
+</div>
+
+
+<!-- lightbox -->
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
+    <span class="close" id="lbClose" aria-label="Close">&times;</span>
+    <img id="lbImg" src="" alt="preview">
+</div>
+
+<script>
+
+    (function () {
+        const lb = document.getElementById('lightbox');
+        const lbImg = document.getElementById('lbImg');
+        const lbClose = document.getElementById('lbClose');
+
+        function open(src) {
+            lbImg.src = src;
+            lb.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close() {
+            lb.classList.remove('open');
+            lbImg.src = '';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('click', function (e) {
+            const t = e.target;
+            if (t && t.classList && t.classList.contains('thumb')) {
+                open(t.getAttribute('data-full') || t.src);
+            } else if (t === lb || t === lbClose) {
+                close();
             }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && lb.classList.contains('open')) close();
+        });
+        document.querySelectorAll(".ts").forEach(el => {
+            const utc = el.dataset.ts; // "2025-09-01T08:45:00Z"
+            const d = new Date(utc);
+            el.textContent = d.toLocaleString("zh-cn"); // 用户当前时区/地区显示
+        });
 
-            function close() {
-                lb.classList.remove('open');
-                lbImg.src = '';
-                document.body.style.overflow = '';
-            }
+        document.querySelectorAll('[class*="ts"]').forEach(el => {
+            const ts = el.dataset.ts;   // 取 data-ts 属性
+            if (!ts) return;
 
-            document.addEventListener('click', function (e) {
-                const t = e.target;
-                if (t && t.classList && t.classList.contains('thumb')) {
-                    open(t.getAttribute('data-full') || t.src);
-                } else if (t === lb || t === lbClose) {
-                    close();
-                }
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && lb.classList.contains('open')) close();
-            });
-            document.querySelectorAll(".ts").forEach(el => {
-                const utc = el.dataset.ts; // "2025-09-01T08:45:00Z"
-                const d = new Date(utc);
-                el.textContent = d.toLocaleString("zh-cn"); // 用户当前时区/地区显示
-            });
+            const d = new Date(Number(ts));
+            // 格式化为中文时间
+            el.textContent = d.toLocaleString("zh-CN");
+        });
 
-            document.querySelectorAll('[class*="ts"]').forEach(el => {
-                const ts = el.dataset.ts;   // 取 data-ts 属性
-                if (!ts) return;
-
-                const d = new Date(Number(ts));
-                // 格式化为中文时间
-                el.textContent = d.toLocaleString("zh-CN");
-            });
-
-            document.addEventListener("DOMContentLoaded", () => {
-                document.querySelectorAll("picture img").forEach(img => {
-                    // 图片加载完成后，img.currentSrc 是浏览器最终选择的资源
-                    img.addEventListener("load", () => {
-                        img.dataset.full = img.currentSrc;
-                    });
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll("picture img").forEach(img => {
+                // 图片加载完成后，img.currentSrc 是浏览器最终选择的资源
+                img.addEventListener("load", () => {
+                    img.dataset.full = img.currentSrc;
                 });
             });
+        });
 
-        })();
+    })();
 
-    </script>
+</script>
 </body>
 </html>
 {{ end }}

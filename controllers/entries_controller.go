@@ -8,6 +8,7 @@ import (
 	"mailtrackerProject/models"
 	"mailtrackerProject/services"
 	"net/http"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -173,7 +174,13 @@ func GetEntryRouteView(entries *services.EntriesService, keySrvc *services.KeysS
 		}
 		//判断key是否创建
 		if entries.HasData(key) { //创建了跳转到展示页
-			c.Redirect(303, "/lookup/"+key)
+			//允许配置全局跳过验证，避免每次都要输验证码
+			noVerify := os.Getenv("DISABLE_VERIFICATION")
+			if noVerify == "true" {
+				c.Redirect(http.StatusTemporaryRedirect, "/view/"+key)
+			} else {
+				c.Redirect(303, "/lookup/"+key)
+			}
 		} else { //没创建跳转到创建页
 			if middleware.IsAdmin(c) {
 				//是管理员就跳转，鉴权由create的中间件处理
@@ -343,8 +350,10 @@ func RegisterEntryRoutes(r *gin.Engine,
 		//jwt鉴权中间件
 		func(c *gin.Context) {
 			key := c.Param("key")
+
+			noVerify := os.Getenv("DISABLE_VERIFICATION")
 			//非管理才鉴权有无jwt
-			if !middleware.IsAdmin(c) {
+			if !middleware.IsAdmin(c) && noVerify != "true" {
 				tok := services.ReadTokenFromRequest(c)
 				claims, err := services.ParseClaims(tok)
 				if err != nil || claims == nil {
