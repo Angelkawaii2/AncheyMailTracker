@@ -94,12 +94,16 @@
                 grid-template-columns: 100px 1fr;
             }
         }
+        .footer {
+            color: #b4b4b4;
+            text-align: center
+        }
     </style>
 </head>
 <body>
     <div class="wrap">
         <div class="card">
-            <h1 style="text-align: center">安洁露邮件溯源查询系统——查询结果: {{ .Key }}</h1>
+            <h1 style="text-align: center">安洁露邮件查询: {{ .Key }}</h1>
 
             {{ if .data }}
             <section class="meta" aria-label="条目信息">
@@ -129,7 +133,7 @@
                     </div>
                     <div class="meta-value">{{ .data.OriginLocation }}</div>
                 </div>
-                {{ if .data.Encrypt.Password }}
+                {{ if .data.Encrypt.Method }}
                 <div class="meta-item">
                     <div class="meta-label">
                         <i class="fa-solid fa-eye"></i> 查询密码
@@ -238,7 +242,9 @@
         {{ end }}
 
         {{end}}
-
+        <a class="footer" href="https://github.com/Angelkawaii2/AncheyMailTracker">项目地址:
+            github.com/Angelkawaii2/AncheyMailTracker </a>
+        <p class="footer">特别感谢: 派兹 提供服务器喵♥</p>
     </div>
 
 

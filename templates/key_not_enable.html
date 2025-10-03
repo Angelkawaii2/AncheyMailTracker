@@ -10,12 +10,10 @@
 <body>
     <div class="wrap">
         <div class="card">
-            <h1>安洁露邮件溯源查询系统</h1>
-            <p>密钥 <strong>{{ .Key }}</strong> 尚未启用。</p>
+            <h1>安洁露邮件查询</h1>
+            <p> <strong>{{ .Key }}</strong> 还在登记中哦，过一段时间再来查看吧！</p>
             <p class="small" style="color: gray">
-                管理员请
                 <button class="btn" onclick="location.href='/create/{{.Key}}'">点击这里登录</button>
-                启用该 Key。
             </p>
         </div>
     </div>
